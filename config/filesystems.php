@@ -32,13 +32,39 @@ return [
 
         'media' => [
             'driver' => 'local',
-            'root'   => public_path('media'),
+            'root'   => public_path('app/media'),
             'url'    => env('APP_URL').'/media',
+        ],
+
+        'tracks' => [
+            'driver' => 'local',
+            'root'   => public_path('app/media/tracks'),
+            'url'    => env('APP_URL').'/media/tracks',
+        ],
+
+        'artwork' => [
+            'driver' => 'local',
+            'root'   => public_path('app/media/artwork'),
+            'url'    => env('APP_URL').'/media/artwork',
+        ],
+
+        'avatars' => [
+            'driver' => 'local',
+            'root' => public_path('app/media/avatars'),
+            'url' => env('APP_URL') . '/media/avatars',
         ],
 
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
+            'throw' => false,
+        ],
+
+        'local-temporary' => [
+            'driver' => 'local',
+            'root' => storage_path('app/temporary'),
+            'url' => env('APP_URL').'/storage/temporary',
+            'visibility' => 'private',
             'throw' => false,
         ],
 

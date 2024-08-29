@@ -15,9 +15,9 @@ return new class extends Migration
     {
         Schema::create('playlist_track', function (Blueprint $table) {
             $table->id();
+            $table->unsignedInteger('order');
             $table->foreignIdFor(Playlist::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Track::class)->constrained()->cascadeOnDelete();
-            $table->timestamps();
             $table->unique(['playlist_id', 'track_id']);
             $table->index('playlist_id');
         });

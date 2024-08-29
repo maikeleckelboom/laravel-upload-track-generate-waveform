@@ -4,13 +4,20 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use TaylorNetwork\UsernameGenerator\FindSimilarUsernames;
+use TaylorNetwork\UsernameGenerator\GeneratesUsernames;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasMedia
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
+    use FindSimilarUsernames;
+    use GeneratesUsernames;
+    use InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'username',
+        'avatar',
     ];
 
     /**
@@ -46,7 +55,7 @@ class User extends Authenticatable
         ];
     }
 
-    // CanFollow trait
+    // CanFollow, CanBeFollowed traits
 
     /**
      * Users that this user is following.
@@ -62,14 +71,23 @@ class User extends Authenticatable
      */
     public function followers()
     {
-        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')
+        return $this->belongsToMany(
+            User::class, 'follows', 'following_id', 'follower_id')
             ->withTimestamps();
+    }
+
+    public function follow(User $user): void
+    {
+        $this->following()->syncWithoutDetaching($user);
+    }
+
+    public function unfollow(User $user): void
+    {
+        $this->following()->detach($user);
     }
 
     /**
      * Check if this user is followed by another user.
-     * @param User $user
-     * @return bool
      */
     public function isFollowedBy(User $user): bool
     {
@@ -78,8 +96,6 @@ class User extends Authenticatable
 
     /**
      * Check if this user follows another user.
-     * @param User $user
-     * @return bool
      */
     public function isFollowing(User $user): bool
     {
