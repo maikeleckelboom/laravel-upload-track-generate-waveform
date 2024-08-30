@@ -11,6 +11,6 @@ class CurrentUserController extends Controller
      */
     public function __invoke(Request $request)
     {
-        return $request->user()->load(['following', 'followers']);
+        return $request->user();
     }
 }

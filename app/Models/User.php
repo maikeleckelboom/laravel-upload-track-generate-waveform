@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
@@ -40,6 +41,13 @@ class User extends Authenticatable implements HasMedia
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+
+    protected $appends = [
+        'avatar_url',
+        'followers_count',
+        'following_count',
     ];
 
     /**
@@ -101,4 +109,39 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->following->contains($user);
     }
+
+    /**
+     * Get the number of followers for this user.
+     */
+    public function getFollowersCountAttribute(): int
+    {
+        return $this->followers()->count();
+    }
+
+    /**
+     * Get the number of users this user is following.
+     */
+    public function getFollowingCountAttribute(): int
+    {
+        return $this->following()->count();
+    }
+
+    // Other ....
+
+    /**
+     * Get the user's avatar.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        $avatar = $this->getFirstMediaUrl('avatar');
+        return !('' === $avatar)
+            ? $avatar
+            : 'https://www.gravatar.com/avatar/' . md5($this->email) . '?d=mp';
+    }
+
+    public function temporaryUploads(): HasMany
+    {
+        return $this->hasMany(TemporaryUpload::class);
+    }
+
 }

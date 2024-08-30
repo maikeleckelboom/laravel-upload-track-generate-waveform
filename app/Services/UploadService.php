@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Data\TemporaryUploadData;
+use App\Enum\TemporaryUploadStatus;
 use App\Exceptions\ChunkCountMismatch;
+use App\Models\TemporaryUpload;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -13,17 +16,17 @@ class UploadService
     /**
      * @throws ChunkCountMismatch
      */
-    public function store(User $user, UploadData $data): Upload
+    public function store(User $user, TemporaryUploadData $data): TemporaryUpload
     {
         $upload = $user
-            ->uploads()
+            ->temporaryUploads()
             ->firstOrCreate(['identifier' => $data->identifier], [
-                'file_name' => $data->fileName,
-                'mime_type' => $data->mimeType,
+                'name' => $data->name,
+                'type' => $data->type,
                 'size' => $data->size,
                 'chunk_size' => $data->chunkSize,
                 'received_chunks' => $data->chunkNumber - 1,
-                'status' => UploadStatus::PENDING,
+                'status' => TemporaryUploadStatus::PENDING,
             ])
             ->refresh();
 
@@ -31,9 +34,13 @@ class UploadService
 
         if ($this->hasReceivedAllChunks($upload)) {
 
-            $upload->update([
-                'path' => $this->assembleChunks($upload),
-                'status' => UploadStatus::COMPLETED
+            $path = $this->assembleChunks($upload);
+
+            $upload->status = TemporaryUploadStatus::COMPLETED;
+
+            logger('Upload completed', [
+                'user_id' => $user->id,
+                'file_path' => $path,
             ]);
 
             $upload->refresh();
@@ -42,7 +49,7 @@ class UploadService
         return $upload;
     }
 
-    private function addChunk(Upload $upload, UploadedFile $uploadedFile): void
+    private function addChunk(TemporaryUpload $upload, UploadedFile $uploadedFile): void
     {
         if ($this->storeChunk($upload, $uploadedFile)) {
             $upload->increment('received_chunks');
@@ -50,19 +57,19 @@ class UploadService
         }
     }
 
-    private function storeChunk(Upload $upload, UploadedFile $uploadedFile): bool
+    private function storeChunk(TemporaryUpload $upload, UploadedFile $uploadedFile): bool
     {
         return $uploadedFile->storeAs(
             $upload->identifier,
             $upload->received_chunks,
-            ['disk' => $upload->chunks_disk]
+            ['disk' => $upload->disk]
         );
     }
 
     /**
      * @throws ChunkCountMismatch
      */
-    private function assembleChunks(Upload $upload): string
+    private function assembleChunks(TemporaryUpload $upload): string
     {
         $disk = Storage::disk($upload->disk);
         $chunksDisk = Storage::disk($upload->chunks_disk);
@@ -73,7 +80,7 @@ class UploadService
             throw new ChunkCountMismatch();
         }
 
-        $destinationPath = $disk->path($upload->file_name);
+        $destinationPath = $disk->path($upload->name);
         $destinationStream = fopen($destinationPath, 'a');
 
         foreach ($chunks as $chunk) {
@@ -89,7 +96,7 @@ class UploadService
         return $destinationPath;
     }
 
-    private function hasReceivedAllChunks(Upload $upload): bool
+    private function hasReceivedAllChunks(TemporaryUpload $upload): bool
     {
         return $upload->received_chunks === $upload->total_chunks;
     }

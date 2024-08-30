@@ -8,17 +8,17 @@ use Spatie\LaravelData\Attributes\Validation\GreaterThanOrEqualTo;
 use Spatie\LaravelData\Attributes\Validation\LessThanOrEqualTo;
 use Spatie\LaravelData\Data;
 
-class UploadData extends Data
+class TemporaryUploadData extends Data
 {
     public function __construct(
         public string       $identifier,
-        public string       $fileName,
-        public string       $mimeType,
-        #[GreaterThan(0)]
-        public int          $fileSize,
-        #[GreaterThan(0)]
+        public string       $name,
+        public string       $type,
+        #[GreaterThan(1)]
+        public int          $size,
+        #[GreaterThanOrEqualTo(1)]
         public int          $totalChunks,
-        #[GreaterThan(0), LessThanOrEqualTo('totalChunks')]
+        #[GreaterThanOrEqualTo(1), LessThanOrEqualTo('totalChunks')]
         public int          $chunkNumber,
         #[GreaterThanOrEqualTo(1024 * 1024)]
         public int          $chunkSize,

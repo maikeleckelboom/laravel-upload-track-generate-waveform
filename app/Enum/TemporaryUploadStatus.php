@@ -2,8 +2,9 @@
 
 namespace App\Enum;
 
-enum UploadStatus: string
+enum TemporaryUploadStatus: string
 {
+    case QUEUED = 'queued';
     case PENDING = 'pending';
     case PROCESSING = 'processing';
     case COMPLETED = 'completed';
@@ -11,6 +12,6 @@ enum UploadStatus: string
 
     public static function toArray(): array
     {
-        return array_column(UploadStatus::cases(), 'value');
+        return array_column(TemporaryUploadStatus::cases(), 'value');
     }
 }

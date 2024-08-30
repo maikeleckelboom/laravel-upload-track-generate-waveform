@@ -1,6 +1,7 @@
 <?php
 
-use App\Enum\UploadStatus;
+use App\Enum\TemporaryUploadStatus;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,6 +15,22 @@ return new class extends Migration {
         Schema::create('temporary_uploads', function (Blueprint $table) {
             $table->id();
 
+            $table->string('identifier')
+                ->unique()
+                ->comment('Unique identifier provided by the client');
+
+            $table->string('name')
+                ->nullable()
+                ->comment('The file name with extension');
+
+            $table->string('type')
+                ->nullable()
+                ->comment('The file MIME type');
+
+            $table->unsignedBigInteger('size')
+                ->nullable()
+                ->comment('The file size in bytes');
+
             $table->unsignedBigInteger('chunk_size')
                 ->comment('Size of each chunk in bytes');
 
@@ -21,13 +38,9 @@ return new class extends Migration {
                 ->default(0)
                 ->comment('Number of received chunks');
 
-            $table->enum('status', UploadStatus::toArray())
-                ->default(UploadStatus::PENDING)
-                ->comment('Current status of the upload');
-
-            $table->string('identifier')
-                ->unique()
-                ->comment('Unique identifier provided by the client');
+            $table->enum('status', TemporaryUploadStatus::toArray())
+                ->default(TemporaryUploadStatus::QUEUED)
+                ->comment('Enum representing the upload status');
 
             $table->json('meta')
                 ->nullable()
@@ -36,6 +49,13 @@ return new class extends Migration {
             $table->string('disk')
                 ->default('local-temporary')
                 ->comment('Disk to store the chunks');
+
+            $table->string('chunks_disk')
+                ->default('local-temporary')
+                ->comment('Disk to store the chunks');
+
+            $table->foreignIdFor(User::class)
+                ->comment('User that initiated the upload');
 
             $table->timestamps();
         });
