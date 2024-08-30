@@ -10,9 +10,9 @@ return [
 
     /*
      * The maximum file size of an item in bytes.
-     * Adding a larger file will result in an exception.
+     * Adding a larger file will result in an exception. 4GB
      */
-    'max_file_size' => env('MAX_FILE_SIZE', "1024 * 1024 * 10"), // 10MB
+    'max_file_size' => env('MAX_FILE_SIZE', "1024 * 1024 * 1024 * 4"),
 
     /*
      * This queue connection will be used to generate derived and responsive images.

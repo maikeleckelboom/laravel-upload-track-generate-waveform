@@ -6,6 +6,8 @@ use App\Data\TemporaryUploadData;
 use App\Exceptions\ChunkCountMismatch;
 use App\Services\UploadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 
 class TrackController extends Controller
 {
@@ -17,7 +19,7 @@ class TrackController extends Controller
     }
 
     /**
-     * @throws ChunkCountMismatch
+     * @throws ChunkCountMismatch|FileCannotBeAdded
      */
     public function store(Request $request)
     {
@@ -25,10 +27,15 @@ class TrackController extends Controller
 
         $temporaryUpload = $this->uploadService->store($request->user(), $data);
 
-        if($temporaryUpload->isCompleted()){
-            return response()->json([
-                'message' => 'Upload completed',
-            ]);
+        if ($temporaryUpload->isCompleted()) {
+
+            logger()->info("{$temporaryUpload->name} has been uploaded with {$temporaryUpload->size} bytes");
+
+            $path =  Storage::disk($temporaryUpload->disk)->path($temporaryUpload->file_name);
+
+            $media = $request->user()
+                ->addMedia($path)
+                ->toMediaCollection('media');
         }
 
         return $temporaryUpload;

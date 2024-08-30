@@ -19,8 +19,9 @@ class TemporaryUpload extends Model implements HasMedia
         'chunk_size',
         'size',
         'name',
-        'type',
+        'mime_type',
         'received_chunks',
+        'file_name',
         'status',
         'meta'
     ];

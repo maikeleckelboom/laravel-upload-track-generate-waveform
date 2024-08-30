@@ -20,15 +20,15 @@ return new class extends Migration {
                 ->comment('Unique identifier provided by the client');
 
             $table->string('name')
-                ->nullable()
-                ->comment('The file name with extension');
+                ->comment('The client original name');
 
-            $table->string('type')
-                ->nullable()
+            $table->string('file_name')
+                ->comment('The file name');
+
+            $table->string('mime_type')
                 ->comment('The file MIME type');
 
             $table->unsignedBigInteger('size')
-                ->nullable()
                 ->comment('The file size in bytes');
 
             $table->unsignedBigInteger('chunk_size')
@@ -47,11 +47,7 @@ return new class extends Migration {
                 ->comment('Additional metadata provided by the client');
 
             $table->string('disk')
-                ->default('local-temporary')
-                ->comment('Disk to store the chunks');
-
-            $table->string('chunks_disk')
-                ->default('local-temporary')
+                ->default('temporary')
                 ->comment('Disk to store the chunks');
 
             $table->foreignIdFor(User::class)

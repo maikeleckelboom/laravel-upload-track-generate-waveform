@@ -32,40 +32,45 @@ return [
 
         'media' => [
             'driver' => 'local',
-            'root'   => public_path('app/media'),
+            'root'   => storage_path('app/media'),
             'url'    => env('APP_URL').'/media',
+            'visibility' => 'private',
         ],
 
         'tracks' => [
             'driver' => 'local',
-            'root'   => public_path('app/media/tracks'),
-            'url'    => env('APP_URL').'/media/tracks',
+            'root'   => storage_path('app/tracks'),
+            'url'    => env('APP_URL').'/tracks',
+            'visibility' => 'public',
         ],
 
         'artwork' => [
             'driver' => 'local',
-            'root'   => public_path('app/media/artwork'),
-            'url'    => env('APP_URL').'/media/artwork',
+            'root'   => storage_path('app/artwork'),
+            'url'    => env('APP_URL').'/artwork',
+            'visibility' => 'public',
         ],
 
         'avatars' => [
             'driver' => 'local',
-            'root' => public_path('app/media/avatars'),
-            'url' => env('APP_URL') . '/media/avatars',
+            'root' => storage_path('app/avatars'),
+            'url' => env('APP_URL') . '/avatars',
+            'visibility' => 'public',
         ],
 
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
+            'url' => env('APP_URL').'/storage',
             'throw' => false,
         ],
 
-        'local-temporary' => [
+        'temporary' => [
             'driver' => 'local',
             'root' => storage_path('app/temporary'),
             'url' => env('APP_URL').'/storage/temporary',
             'visibility' => 'private',
-            'throw' => false,
+            'throw' => true,
         ],
 
         'public' => [

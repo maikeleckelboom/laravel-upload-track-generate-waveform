@@ -9,6 +9,8 @@ use App\Models\TemporaryUpload;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 
 class UploadService
 {
@@ -22,7 +24,8 @@ class UploadService
             ->temporaryUploads()
             ->firstOrCreate(['identifier' => $data->identifier], [
                 'name' => $data->name,
-                'type' => $data->type,
+                'file_name' => md5($data->name) . '.' . pathinfo($data->name, PATHINFO_EXTENSION),
+                'mime_type' => $data->type,
                 'size' => $data->size,
                 'chunk_size' => $data->chunkSize,
                 'received_chunks' => $data->chunkNumber - 1,
@@ -37,13 +40,7 @@ class UploadService
             $path = $this->assembleChunks($upload);
 
             $upload->status = TemporaryUploadStatus::COMPLETED;
-
-            logger('Upload completed', [
-                'user_id' => $user->id,
-                'file_path' => $path,
-            ]);
-
-            $upload->refresh();
+            $upload->save();
         }
 
         return $upload;
@@ -72,26 +69,25 @@ class UploadService
     private function assembleChunks(TemporaryUpload $upload): string
     {
         $disk = Storage::disk($upload->disk);
-        $chunksDisk = Storage::disk($upload->chunks_disk);
 
-        $chunks = $chunksDisk->files($upload->identifier);
+        $chunks = $disk->files($upload->identifier);
 
         if (count($chunks) !== $upload->total_chunks) {
             throw new ChunkCountMismatch();
         }
 
-        $destinationPath = $disk->path($upload->name);
+        $destinationPath = $disk->path($upload->file_name);
         $destinationStream = fopen($destinationPath, 'a');
 
         foreach ($chunks as $chunk) {
-            $chunkStream = $chunksDisk->readStream($chunk);
+            $chunkStream = $disk->readStream($chunk);
             stream_copy_to_stream($chunkStream, $destinationStream);
             fclose($chunkStream);
-            $chunksDisk->delete($chunk);
+            $disk->delete($chunk);
         }
 
         fclose($destinationStream);
-        $chunksDisk->deleteDirectory($upload->identifier);
+        $disk->deleteDirectory($upload->identifier);
 
         return $destinationPath;
     }
