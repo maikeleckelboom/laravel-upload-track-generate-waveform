@@ -6,13 +6,13 @@ return [
      * The disk on which to store added files and derived images by default. Choose
      * one or more of the disks you've configured in config/filesystems.php.
      */
-    'disk_name' => env('MEDIA_DISK', 'public'),
+    'disk_name' => env('MEDIA_DISK', 'media'),
 
     /*
      * The maximum file size of an item in bytes.
-     * Adding a larger file will result in an exception. 4GB
+     * Adding a larger file will result in an exception.
      */
-    'max_file_size' => env('MAX_FILE_SIZE', "1024 * 1024 * 1024 * 4"),
+    'max_file_size' => env('MAX_FILE_SIZE', 1024 * 1024 * 1024 * 4),
 
     /*
      * This queue connection will be used to generate derived and responsive images.
@@ -39,7 +39,8 @@ return [
     /*
      * The fully qualified class name of the media model.
      */
-    'media_model' => Spatie\MediaLibrary\MediaCollections\Models\Media::class,
+    'media_model' => \App\Models\Media::class,
+//    'media_model' => Spatie\MediaLibrary\MediaCollections\Models\Media::class,
 
     /*
      * When enabled, media collections will be serialised using the default

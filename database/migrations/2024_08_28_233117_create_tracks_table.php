@@ -42,7 +42,7 @@ return new class extends Migration {
 
 
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Genre::class)->constrained()->cascadeOnDelete();
+//            $table->foreignIdFor(Genre::class)->constrained()->cascadeOnDelete();
 
             $table->timestamps();
         });

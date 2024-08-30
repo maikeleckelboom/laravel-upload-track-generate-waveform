@@ -8,26 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class TemporaryUpload extends Model implements HasMedia
+class Upload extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
-    protected $fillable = [
-        'user_id',
-        'genre_id',
-        'identifier',
-        'chunk_size',
-        'size',
-        'name',
-        'mime_type',
-        'received_chunks',
-        'file_name',
-        'status',
-        'meta'
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'chunk_size' => 'int',
+        'size' => 'int',
         'meta' => 'array',
     ];
 
@@ -59,7 +48,7 @@ class TemporaryUpload extends Model implements HasMedia
 
     public function isCompleted(): bool
     {
-        return $this->received_chunks === $this->total_chunks || $this->status === 'completed';
+        return $this->status === 'completed';
     }
 
 }

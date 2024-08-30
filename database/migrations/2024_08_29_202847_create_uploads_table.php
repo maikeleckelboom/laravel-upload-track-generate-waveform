@@ -1,6 +1,6 @@
 <?php
 
-use App\Enum\TemporaryUploadStatus;
+use App\Enum\UploadStatus;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('temporary_uploads', function (Blueprint $table) {
+        Schema::create('uploads', function (Blueprint $table) {
             $table->id();
 
             $table->string('identifier')
@@ -38,8 +38,8 @@ return new class extends Migration {
                 ->default(0)
                 ->comment('Number of received chunks');
 
-            $table->enum('status', TemporaryUploadStatus::toArray())
-                ->default(TemporaryUploadStatus::QUEUED)
+            $table->enum('status', UploadStatus::toArray())
+                ->default(UploadStatus::QUEUED)
                 ->comment('Enum representing the upload status');
 
             $table->json('meta')
@@ -49,6 +49,10 @@ return new class extends Migration {
             $table->string('disk')
                 ->default('temporary')
                 ->comment('Disk to store the chunks');
+
+            $table->string('path')
+                ->nullable()
+                ->comment('Relative path to the file');
 
             $table->foreignIdFor(User::class)
                 ->comment('User that initiated the upload');
@@ -62,6 +66,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('temporary_uploads');
+        Schema::dropIfExists('uploads');
     }
 };

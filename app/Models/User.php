@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use TaylorNetwork\UsernameGenerator\FindSimilarUsernames;
 use TaylorNetwork\UsernameGenerator\GeneratesUsernames;
 
@@ -25,12 +27,7 @@ class User extends Authenticatable implements HasMedia
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'username',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -41,7 +38,6 @@ class User extends Authenticatable implements HasMedia
         'password',
         'remember_token',
     ];
-
 
     protected $appends = [
         'avatar_url',
@@ -138,9 +134,14 @@ class User extends Authenticatable implements HasMedia
             : 'https://www.gravatar.com/avatar/' . md5($this->email) . '?d=mp';
     }
 
-    public function temporaryUploads(): HasMany
+    public function uploads(): HasMany
     {
-        return $this->hasMany(TemporaryUpload::class);
+        return $this->hasMany(Upload::class);
+    }
+
+    public function tracks(): HasMany
+    {
+        return $this->hasMany(Track::class);
     }
 
 }

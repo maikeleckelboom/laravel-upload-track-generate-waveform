@@ -8,7 +8,7 @@ use Spatie\LaravelData\Attributes\Validation\GreaterThanOrEqualTo;
 use Spatie\LaravelData\Attributes\Validation\LessThanOrEqualTo;
 use Spatie\LaravelData\Data;
 
-class TemporaryUploadData extends Data
+class UploadData extends Data
 {
     public function __construct(
         public string       $identifier,

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\TemporaryUploadData;
+use App\Data\UploadData;
 use App\Exceptions\ChunkCountMismatch;
 use App\Services\UploadService;
+use Illuminate\Http\File;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 
 class TrackController extends Controller
@@ -23,21 +23,24 @@ class TrackController extends Controller
      */
     public function store(Request $request)
     {
-        $data = TemporaryUploadData::validateAndCreate($request->all());
+        $user = $request->user();
+        $data = UploadData::validateAndCreate($request->all());
 
-        $temporaryUpload = $this->uploadService->store($request->user(), $data);
+        $upload = $this->uploadService->store($user, $data);
 
-        if ($temporaryUpload->isCompleted()) {
+        if ($upload->isCompleted()) {
 
-            logger()->info("{$temporaryUpload->name} has been uploaded with {$temporaryUpload->size} bytes");
+            logger()->info("{$upload->name} has been completed");
 
-            $path =  Storage::disk($temporaryUpload->disk)->path($temporaryUpload->file_name);
+            $track = $user->tracks()->create([
+                'title' => 'Untitled',
+                'artist' => 'Unknown',
+            ]);
 
-            $media = $request->user()
-                ->addMedia($path)
-                ->toMediaCollection('media');
+            $track->addMedia($upload->path)->toMediaCollection('tracks');
+
         }
 
-        return $temporaryUpload;
+        return $upload;
     }
 }

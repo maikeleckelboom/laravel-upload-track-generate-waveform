@@ -23,7 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'FFMpeg' => ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::class,
         ]);
 
-        //
     })
     ->withProviders([
         ProtoneMedia\LaravelFFMpeg\Support\ServiceProvider::class,

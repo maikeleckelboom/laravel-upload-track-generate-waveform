@@ -32,9 +32,10 @@ return [
 
         'media' => [
             'driver' => 'local',
-            'root'   => storage_path('app/media'),
-            'url'    => env('APP_URL').'/media',
+            'root' => storage_path('app/media'),
+            'url' => env('APP_URL') . '/storage/media',
             'visibility' => 'private',
+            'throw' => false,
         ],
 
         'tracks' => [
