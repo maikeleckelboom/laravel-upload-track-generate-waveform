@@ -42,21 +42,21 @@ return [
             'driver' => 'local',
             'root'   => storage_path('app/tracks'),
             'url'    => env('APP_URL').'/storage/tracks',
-            'visibility' => 'public',
+            'visibility' => 'private',
         ],
 
         'artwork' => [
             'driver' => 'local',
             'root'   => storage_path('app/artwork'),
             'url'    => env('APP_URL').'/storage/artwork',
-            'visibility' => 'public',
+            'visibility' => 'private',
         ],
 
         'avatars' => [
             'driver' => 'local',
             'root' => storage_path('app/avatars'),
             'url' => env('APP_URL') . '/storage/avatars',
-            'visibility' => 'public',
+            'visibility' => 'private',
         ],
 
         'local' => [

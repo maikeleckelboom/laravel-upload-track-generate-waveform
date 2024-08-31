@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
@@ -26,9 +25,18 @@ class Upload extends Model implements HasMedia
         'progress',
     ];
 
+    protected $hidden = [
+        'path',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getExtensionAttribute(): string
+    {
+        return pathinfo($this->file_name, PATHINFO_EXTENSION);
     }
 
     public function getReceivedBytesAttribute(): int
@@ -50,10 +58,4 @@ class Upload extends Model implements HasMedia
     {
         return $this->status === 'completed';
     }
-
-    public function getExtensionAttribute(): string
-    {
-        return pathinfo($this->file_name, PATHINFO_EXTENSION);
-    }
-
 }

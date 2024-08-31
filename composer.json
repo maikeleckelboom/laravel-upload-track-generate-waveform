@@ -57,7 +57,8 @@
             "@php artisan migrate --graceful --ansi"
         ],
         "refresh": [
-            "@php artisan migrate:fresh --seed --force --ansi",
+            "@php artisan media-library:clear",
+            "@php artisan migrate:fresh --seed --force",
             "@php artisan optimize:clear --ansi"
         ]
     },
