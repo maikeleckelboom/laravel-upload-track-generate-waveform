@@ -51,4 +51,9 @@ class Upload extends Model implements HasMedia
         return $this->status === 'completed';
     }
 
+    public function getExtensionAttribute(): string
+    {
+        return pathinfo($this->file_name, PATHINFO_EXTENSION);
+    }
+
 }

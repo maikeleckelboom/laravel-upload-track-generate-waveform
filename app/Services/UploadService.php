@@ -9,12 +9,10 @@ use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
-use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
+use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 
 class UploadService
 {
-
     /**
      * @throws ChunkCountMismatch
      */
@@ -23,9 +21,8 @@ class UploadService
         $upload = $user
             ->uploads()
             ->firstOrCreate(['identifier' => $data->identifier], [
-                'name' => $data->name,
-                'file_name' => $data->name,
-//                'file_name' => md5($data->name) . '.' . pathinfo($data->name, PATHINFO_EXTENSION),
+                'name' => pathinfo($data->name, PATHINFO_FILENAME),
+                'file_name' => $this->getFileName($data->name),
                 'mime_type' => $data->type,
                 'size' => $data->size,
                 'chunk_size' => $data->chunkSize,
@@ -44,7 +41,6 @@ class UploadService
             ]);
 
             $upload->refresh();
-
         }
 
         return $upload;
@@ -98,5 +94,13 @@ class UploadService
     private function hasReceivedAllChunks(Upload $upload): bool
     {
         return $upload->received_chunks === $upload->total_chunks;
+    }
+
+    private function getFileName(string $name): string
+    {
+        $nameGenerator = new DefaultFileNamer();
+        $fileName = $nameGenerator->originalFileName($name);
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
+        return "{$fileName}.{$extension}";
     }
 }

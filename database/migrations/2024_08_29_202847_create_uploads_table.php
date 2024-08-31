@@ -15,47 +15,18 @@ return new class extends Migration {
         Schema::create('uploads', function (Blueprint $table) {
             $table->id();
 
-            $table->string('identifier')
-                ->unique()
-                ->comment('Unique identifier provided by the client');
-
-            $table->string('name')
-                ->comment('The client original name');
-
-            $table->string('file_name')
-                ->comment('The file name');
-
-            $table->string('mime_type')
-                ->comment('The file MIME type');
-
-            $table->unsignedBigInteger('size')
-                ->comment('The file size in bytes');
-
-            $table->unsignedBigInteger('chunk_size')
-                ->comment('Size of each chunk in bytes');
-
-            $table->unsignedBigInteger('received_chunks')
-                ->default(0)
-                ->comment('Number of received chunks');
-
-            $table->enum('status', UploadStatus::toArray())
-                ->default(UploadStatus::QUEUED)
-                ->comment('Enum representing the upload status');
-
-            $table->json('meta')
-                ->nullable()
-                ->comment('Additional metadata provided by the client');
-
-            $table->string('disk')
-                ->default('temporary')
-                ->comment('Disk to store the chunks');
-
-            $table->string('path')
-                ->nullable()
-                ->comment('Relative path to the file');
-
-            $table->foreignIdFor(User::class)
-                ->comment('User that initiated the upload');
+            $table->string('identifier')->unique();
+            $table->string('name');
+            $table->string('file_name');
+            $table->string('mime_type');
+            $table->unsignedBigInteger('size');
+            $table->unsignedBigInteger('chunk_size');
+            $table->unsignedBigInteger('received_chunks')->default(0);
+            $table->json('meta')->nullable();
+            $table->string('path')->nullable();
+            $table->string('disk')->default('temporary');
+            $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
 
             $table->timestamps();
         });
