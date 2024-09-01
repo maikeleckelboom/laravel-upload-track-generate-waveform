@@ -14,10 +14,9 @@ return new class extends Migration {
     {
         Schema::create('playlists', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('title');
             $table->string('description')->nullable();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Genre::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

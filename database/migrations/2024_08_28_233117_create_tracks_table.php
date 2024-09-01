@@ -18,32 +18,8 @@ return new class extends Migration {
             $table->string('title');
             $table->string('description')->nullable();
 
-            $table->string('artist');
-
-            $table->unsignedBigInteger('duration_ts')
-                ->nullable()
-                ->comment('Duration in milliseconds');
-
-            $table->unsignedInteger('sample_rate')
-                ->nullable()
-                ->comment('Sample rate in Hz');
-
-            $table->unsignedInteger('bit_depth')
-                ->nullable()
-                ->comment('Bits per sample');
-
-            $table->unsignedInteger('channels')
-                ->nullable()
-                ->comment('Number of channels');
-
-            $table->string('codec_name')
-                ->nullable()
-                ->comment('Codec used to encode the track');
-
 
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-//            $table->foreignIdFor(Genre::class)->constrained()->cascadeOnDelete();
-
             $table->timestamps();
         });
     }

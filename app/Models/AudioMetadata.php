@@ -4,16 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Playlist extends Model
+class AudioMetadata extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
 
-    public function tracks(): BelongsToMany
+    public function track(): BelongsTo
     {
-        return $this->belongsToMany(Track::class);
+        return $this->belongsTo(Track::class);
     }
 }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class CurrentUserController extends Controller
+class UserController extends Controller
 {
     /**
      * Handle the incoming request.

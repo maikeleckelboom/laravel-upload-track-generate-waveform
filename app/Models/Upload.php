@@ -4,15 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Upload extends Model implements HasMedia
+class Upload extends Model
 {
-    use InteractsWithMedia;
-
     protected $guarded = [];
 
+    protected $hidden = [
+        'path',
+    ];
     protected $casts = [
         'chunk_size' => 'int',
         'size' => 'int',
@@ -23,10 +22,6 @@ class Upload extends Model implements HasMedia
         'total_chunks',
         'received_bytes',
         'progress',
-    ];
-
-    protected $hidden = [
-        'path',
     ];
 
     public function user(): BelongsTo

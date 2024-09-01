@@ -24,7 +24,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('received_chunks')->default(0);
             $table->json('meta')->nullable();
             $table->string('path')->nullable();
-            $table->string('disk')->default('temporary');
+            $table->string('disk')->default('local-temporal');
             $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
 

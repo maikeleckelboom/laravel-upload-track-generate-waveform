@@ -30,46 +30,18 @@ return [
 
     'disks' => [
 
-        'media' => [
-            'driver' => 'local',
-            'root' => storage_path('app/media'),
-            'url' => env('APP_URL') . '/storage/media',
-            'visibility' => 'private',
-            'throw' => false,
-        ],
-
-        'tracks' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/tracks'),
-            'url'    => env('APP_URL').'/storage/tracks',
-            'visibility' => 'private',
-        ],
-
-        'artwork' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/artwork'),
-            'url'    => env('APP_URL').'/storage/artwork',
-            'visibility' => 'private',
-        ],
-
-        'avatars' => [
-            'driver' => 'local',
-            'root' => storage_path('app/avatars'),
-            'url' => env('APP_URL') . '/storage/avatars',
-            'visibility' => 'private',
-        ],
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
             'url' => env('APP_URL').'/storage',
+            'visibility' => 'private',
             'throw' => false,
         ],
 
-        'temporary' => [
+        'local-temporal' => [
             'driver' => 'local',
-            'root' => storage_path('app/temporary'),
-            'url' => env('APP_URL').'/storage/temporary',
+            'root' => storage_path('app/temporal'),
+            'url' => env('APP_URL').'/storage/temporal',
             'visibility' => 'private',
             'throw' => true,
         ],

@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
-use Spatie\MediaLibrary\Support\File;
 
 class Media extends BaseMedia
 {
@@ -17,7 +15,4 @@ class Media extends BaseMedia
             ->where('collection_name', $this->collection_name)
             ->max($this->determineOrderColumnName());
     }
-
-
-
 }

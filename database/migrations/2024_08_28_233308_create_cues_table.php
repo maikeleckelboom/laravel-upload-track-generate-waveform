@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
-            $table->unsignedBigInteger('start_ts');
+            $table->unsignedBigInteger('start_ts')->comment('Start time in milliseconds');
             $table->foreignIdFor(Track::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();

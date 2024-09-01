@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Playlist;
 use App\Models\User;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Database\Factories\PlaylistFactory;
+use Database\Factories\TrackFactory;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -35,6 +38,11 @@ class DatabaseSeeder extends Seeder
 
 
         // ....
+
+        $playlist = PlaylistFactory::new()->create([
+            'user_id' => $testUser->id,
+        ]);
+
 
     }
 }
