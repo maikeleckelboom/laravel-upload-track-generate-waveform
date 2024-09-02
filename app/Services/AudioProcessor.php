@@ -46,7 +46,6 @@ class AudioProcessor
             'codec_name' => $stream->get('codec_name'),
             'codec_tag_string' => $stream->get('codec_tag_string'),
             'channels' => $stream->get('channels'),
-//            'duration' => $stream->get('duration'),
             'duration_ts' => $stream->get('duration_ts'),
             'sample_rate' => $stream->get('sample_rate'),
             'bit_rate' => $stream->get('bit_rate'),

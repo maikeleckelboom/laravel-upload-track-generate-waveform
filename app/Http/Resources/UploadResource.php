@@ -34,12 +34,12 @@ class UploadResource extends JsonResource
             'type' => $this->mime_type,
             'extension' => $this->extension,
             'status' => $this->status,
-            'metadata' => [
-                'totalBytes' => $this->size,
+            'progress' => [
+                'percentage' => $this->progress,
+                'receivedChunks' => $this->received_chunks,
                 'receivedBytes' => $this->received_bytes,
                 'totalChunks' => $this->total_chunks,
-                'receivedChunks' => $this->received_chunks,
-                'progress' => $this->progress,
+                'totalBytes' => $this->size,
             ],
         ];
     }

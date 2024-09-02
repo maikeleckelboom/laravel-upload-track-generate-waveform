@@ -40,9 +40,6 @@ class TrackController extends Controller
             UploadData::validateAndCreate($request->all())
         );
 
-        // Upload has been initialized
-
-
         if ($upload->isCompleted()) {
             $track = $user->tracks()->create(['title' => $upload->name]);
             $metadata = $this->audioProcessor->processMetadata($upload);
@@ -67,12 +64,5 @@ class TrackController extends Controller
     {
         $track->delete();
         return response()->json(['message' => 'Track deleted']);
-    }
-
-    private function addToMediaCollection(mixed $user, Upload $upload): void
-    {
-        $user->addMedia($upload->path)
-            ->usingName($upload->name)
-            ->toMediaCollection('tracks');
     }
 }
