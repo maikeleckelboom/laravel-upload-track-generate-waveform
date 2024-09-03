@@ -14,9 +14,17 @@ return new class extends Migration {
     {
         Schema::create('cues', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->default('')->comment('Cue name');
             $table->string('description')->nullable();
-            $table->unsignedBigInteger('start_ts')->comment('Start time in milliseconds');
+            $table->float('start_time')->comment('Start time in seconds');
+            $table->float('end_time')->comment('End time in seconds');
+            $table->unsignedBigInteger('start_ts')
+                ->nullable()
+                ->comment('Start time in milliseconds');
+            $table->unsignedBigInteger('end_ts')
+                ->nullable()
+                ->comment('End time in milliseconds');
+            $table->unsignedInteger('index')->comment('Cue index');
             $table->foreignIdFor(Track::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();

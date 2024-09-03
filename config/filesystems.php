@@ -35,13 +35,21 @@ return [
             'root' => storage_path('app'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'private',
-            'throw' => false,
+            'throw' => true,
         ],
 
-        'local-temporal' => [
+        'local-temporary' => [
             'driver' => 'local',
-            'root' => storage_path('app/temporal'),
-            'url' => env('APP_URL').'/storage/temporal',
+            'root' => storage_path('app/temporary'),
+            'url' => env('APP_URL').'/storage/temporary',
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
+        'local-test-cases' => [
+            'driver' => 'local',
+            'root' => storage_path('test_cases/app'),
+            'url' => env('APP_URL').'/storage/test_cases/app',
             'visibility' => 'private',
             'throw' => true,
         ],

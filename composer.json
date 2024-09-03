@@ -16,7 +16,8 @@
         "php-ffmpeg/php-ffmpeg": "^1.2",
         "spatie/laravel-data": "^4.8",
         "spatie/laravel-medialibrary": "^11.9",
-        "taylornetwork/laravel-username-generator": "^2.8"
+        "taylornetwork/laravel-username-generator": "^2.8",
+        "ext-fileinfo": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

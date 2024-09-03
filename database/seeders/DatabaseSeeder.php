@@ -17,31 +17,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $testUser = User::factory()->create([
+        $user = User::factory()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'tests@example.com',
         ]);
 
-        $erik = User::factory()->create([
-            'name' => 'Erik L. Arneson',
-            'email' => 'erik@example.com',
-        ]);
+//        $erik = User::factory()->create([
+//            'name' => 'Erik L. Arneson',
+//            'email' => 'erik@example.com',
+//        ]);
+//
+//        $joy = User::factory()->create([
+//            'name' => 'Joy Ajayi',
+//            'email' => 'joy@example.com',
+//        ]);
+//
+//        $testUser->follow($erik);
+//        $erik->follow($testUser);
+//        $joy->follow($testUser);
 
-        $joy = User::factory()->create([
-            'name' => 'Joy Ajayi',
-            'email' => 'joy@example.com',
-        ]);
-
-        $testUser->follow($erik);
-        $erik->follow($testUser);
-        $joy->follow($testUser);
-
-
-        // ....
-
-        $playlist = PlaylistFactory::new()->create([
-            'user_id' => $testUser->id,
-        ]);
+        $this->call(TrackSeeder::class);
 
 
     }

@@ -32,24 +32,23 @@ class UploadController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
+        $data = UploadData::validateAndCreate($request->all());
+        $upload = $this->uploadService->store($user, $data);
 
-        $upload = $this->uploadService->store(
-            $user,
-            UploadData::validateAndCreate($request->all())
-        );
+        $result = $upload->isCompleted() ? $this->addUploadToCollection($user, $upload) : null;
 
-        $media = $upload->isCompleted() ?: $this->saveUploadAsMedia($user, $upload);
-
-        return response()->json(UploadResource::make($upload, $media));
+        return response()->json(UploadResource::make($upload, $result));
     }
 
-    public function show(Request $request, Upload $upload)
+    public function show(Request $request, string $identifier)
     {
+        $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
         return response()->json(UploadResource::make($upload));
     }
 
-    public function destroy(Request $request, Upload $upload)
+    public function destroy(Request $request, string $identifier)
     {
+        $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
         $upload->delete();
         return response()->json(null, 204);
     }
@@ -57,8 +56,11 @@ class UploadController extends Controller
     /**
      * @throws FileDoesNotExist|FileIsTooBig
      */
-    public function saveUploadAsMedia(User $user, Upload $upload): \Spatie\MediaLibrary\MediaCollections\Models\Media
+    public function addUploadToCollection(User $user, Upload $upload): \Spatie\MediaLibrary\MediaCollections\Models\Media
     {
-        return $user->addMedia($upload->path)->toMediaCollection('uploads');
+        return $user->addMedia($upload->path)
+            ->withResponsiveImages()
+            ->toMediaCollection();
+
     }
 }

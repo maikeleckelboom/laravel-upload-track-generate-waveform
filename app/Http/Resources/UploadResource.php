@@ -3,8 +3,10 @@
 namespace App\Http\Resources;
 
 use App\Enum\UploadStatus;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $identifier
@@ -25,7 +27,7 @@ class UploadResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request): array
+    public function toArray(Request $request, Model|null $uploaded = null): array
     {
         return [
             'identifier' => $this->identifier,
@@ -35,12 +37,15 @@ class UploadResource extends JsonResource
             'extension' => $this->extension,
             'status' => $this->status,
             'progress' => [
-                'percentage' => $this->progress,
+                'value' => $this->progress,
                 'receivedChunks' => $this->received_chunks,
                 'receivedBytes' => $this->received_bytes,
                 'totalChunks' => $this->total_chunks,
                 'totalBytes' => $this->size,
             ],
+            'meta' => [
+                'elapsedMilliseconds' => $this->elapsed_milliseconds,
+            ]
         ];
     }
 }

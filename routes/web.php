@@ -18,7 +18,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::resource('upload', UploadController::class)
         ->except(['create', 'edit'])
-        ->parameters(['upload' => 'identifier'])
         ->names([
             'index' => 'upload.index',
             'store' => 'upload.store',
@@ -28,11 +27,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::resource('track', TrackController::class)
         ->except(['create', 'edit'])
-        ->parameters(['track' => 'id'])
         ->names([
-            'index' => 'track.index',
-            'store' => 'track.store',
-            'show' => 'track.show',
-            'update' => 'track.update',
+            'index' => 'tracks.index',
+            'store' => 'tracks.store',
+            'show' => 'tracks.show',
+            'update' => 'tracks.update',
         ]);
 });

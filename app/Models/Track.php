@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -41,5 +43,10 @@ class Track extends Model implements HasMedia
     public function audioMetadata(): HasOne
     {
         return $this->hasOne(AudioMetadata::class);
+    }
+
+    public function getStorageInstance(): FilesystemAdapter|Filesystem
+    {
+        return $this->getMediaDisk();
     }
 }

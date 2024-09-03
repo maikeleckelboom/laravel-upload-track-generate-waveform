@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App;
 
+use App\Models\Track;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Pluralizer;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -12,8 +13,9 @@ class PathGenerator extends DefaultPathGenerator implements PathGeneratorInterfa
 {
     public function getPath(Media $media): string
     {
-        if($media->collection_name === 'tracks') {
-            return 'tracks/' . $media->getKey() . '/';
+        if ($media->model instanceof Track) {
+            $collectionName = $media->collection_name === 'default' ? '' : $media->collection_name . '/';
+            return "Track/{$media->model->getKey()}/{$collectionName}/";
         }
 
         return $this->pluralizeModelName($media->model) . '/'

@@ -39,17 +39,15 @@ class AudioProcessor
 
     private function extractAudioMetadata(Stream $stream): array
     {
-        logger(collect($stream->all())->toJson(
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-        ));
         return [
             'codec_name' => $stream->get('codec_name'),
             'codec_tag_string' => $stream->get('codec_tag_string'),
             'channels' => $stream->get('channels'),
             'duration_ts' => $stream->get('duration_ts'),
-            'sample_rate' => $stream->get('sample_rate'),
+            'duration' => $stream->get('duration'),
+            'sample_rate' => $stream->get('sample_rate') ?: $stream->get('sample_rate'),
             'bit_rate' => $stream->get('bit_rate'),
-            'bits_per_sample' => $stream->get('bits_per_sample') ?: null,
+            'bits_per_sample' => $stream->get('bits_per_sample') ?: $stream->get('bits_per_raw_sample'),
             'language' => $stream->get('tags')['language'] ?? null,
         ];
     }

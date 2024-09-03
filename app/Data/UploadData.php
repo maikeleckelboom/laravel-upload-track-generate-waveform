@@ -23,6 +23,7 @@ class UploadData extends Data
         #[GreaterThanOrEqualTo(1024 * 1024)]
         public int          $chunkSize,
         public UploadedFile $chunkData,
+        public ?int         $elapsedMilliseconds = 0,
     )
     {
     }

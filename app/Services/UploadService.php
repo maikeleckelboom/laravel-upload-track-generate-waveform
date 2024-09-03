@@ -26,12 +26,16 @@ class UploadService
                 'mime_type' => $data->type,
                 'size' => $data->size,
                 'chunk_size' => $data->chunkSize,
-                'received_chunks' => $data->chunkNumber - 1,
                 'status' => UploadStatus::PENDING,
+                'received_chunks' => $data->chunkNumber - 1,
             ])
             ->refresh();
 
         $this->addChunk($upload, $data->chunkData);
+
+        $upload->update([
+            'elapsed_milliseconds' => $data->elapsedMilliseconds,
+        ]);
 
         if ($this->hasReceivedAllChunks($upload)) {
 
