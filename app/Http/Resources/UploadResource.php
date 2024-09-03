@@ -19,6 +19,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $extension
  * @property string $mime_type
  * @property string $name
+ * @property int $elapsed_milliseconds
  */
 class UploadResource extends JsonResource
 {
@@ -45,7 +46,11 @@ class UploadResource extends JsonResource
             ],
             'meta' => [
                 'elapsedMilliseconds' => $this->elapsed_milliseconds,
-            ]
+                'transferSpeed' => '0 KB/s',
+                'elapsedDuration' => '00:00',
+                'remainingDuration' => '00:00',
+                'estimatedTimeArrival' => '00:00:00',
+            ],
         ];
     }
 }
