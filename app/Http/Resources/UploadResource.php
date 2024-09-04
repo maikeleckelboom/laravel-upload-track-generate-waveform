@@ -38,7 +38,7 @@ class UploadResource extends JsonResource
             'extension' => $this->extension,
             'status' => $this->status,
             'progress' => [
-                'value' => $this->progress,
+                'percentage' => $this->progress,
                 'receivedChunks' => $this->received_chunks,
                 'receivedBytes' => $this->received_bytes,
                 'totalChunks' => $this->total_chunks,
