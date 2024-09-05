@@ -3,6 +3,7 @@
 namespace App\Data;
 
 use Illuminate\Http\UploadedFile;
+use Spatie\LaravelData\Attributes\Validation\File;
 use Spatie\LaravelData\Attributes\Validation\GreaterThan;
 use Spatie\LaravelData\Attributes\Validation\GreaterThanOrEqualTo;
 use Spatie\LaravelData\Attributes\Validation\LessThanOrEqualTo;
@@ -22,6 +23,7 @@ class UploadData extends Data
         public int          $chunkNumber,
         #[GreaterThanOrEqualTo(1024 * 1024)]
         public int          $chunkSize,
+        #[File]
         public UploadedFile $chunkData,
         public ?int         $elapsedMilliseconds = 0,
     )

@@ -28,7 +28,7 @@ class UploadResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request, Model|null $uploaded = null): array
+    public function toArray(Request $request, Model|null $data = null): array
     {
         return [
             'identifier' => $this->identifier,
@@ -46,13 +46,13 @@ class UploadResource extends JsonResource
             ],
             'metrics' => [
                 'elapsedMilliseconds' => $this->elapsed_milliseconds,
-                'elapsedTime' => '00:00',
+                'elapsedTime' => gmdate('i:s', $this->elapsed_milliseconds / 1000),
                 'remainingTime' => '00:00',
                 'estimatedTimeArrival' => '00:00:00',
                 'transferSpeed' => '0 KB/s',
             ],
-            $this->mergeWhen(!is_null($uploaded), [
-                'data' => MediaResource::make($uploaded),
+            $this->mergeWhen(!is_null($data), [
+                'data' => MediaResource::make($data),
             ]),
         ];
     }

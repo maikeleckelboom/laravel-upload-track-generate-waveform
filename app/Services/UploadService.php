@@ -64,8 +64,10 @@ class UploadService
             throw new ChunkStorageFailed();
         }
 
-        $upload->increment('received_chunks');
-        $upload->save();
+        if ($upload->received_chunks < $upload->total_chunks) {
+            $upload->increment('received_chunks');
+            $upload->save();
+        }
     }
 
     private function storeChunk(Upload $upload, UploadedFile $uploadedFile): bool

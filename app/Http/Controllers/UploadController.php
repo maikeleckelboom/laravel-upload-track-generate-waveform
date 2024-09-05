@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Data\UploadData;
 use App\Exceptions\ChunkCountMismatch;
+use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
 use App\Models\Media;
 use App\Models\Upload;
@@ -29,7 +30,10 @@ class UploadController extends Controller
     }
 
     /**
-     * @throws ChunkCountMismatch|FileDoesNotExist|FileIsTooBig
+     * @throws ChunkCountMismatch
+     * @throws FileIsTooBig
+     * @throws FileDoesNotExist
+     * @throws ChunkStorageFailed
      */
     public function store(Request $request)
     {
@@ -62,11 +66,12 @@ class UploadController extends Controller
     public function addUploadToCollection(User $user, Upload $upload): \Spatie\MediaLibrary\MediaCollections\Models\Media
     {
         try {
-            $user->addMedia($upload->path)->toMediaCollection();
+            return $user->addMedia($upload->path)->toMediaCollection();
 
         } catch (Exception $e) {
             if ($e instanceof FileDoesNotExist) {
                 $resource = $this->tryFindMediaResource($user, $upload);
+
                 if ($resource->isEmpty()) {
                     throw $e;
                 }
@@ -76,8 +81,6 @@ class UploadController extends Controller
 
             throw $e;
         }
-
-        return $user->getMedia()->where('file_name', $upload->file_name)->first();
     }
 
     private function tryFindMediaResource(User $user, Upload $upload): MediaCollection

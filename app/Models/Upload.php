@@ -47,7 +47,7 @@ class Upload extends Model
 
     public function getProgressAttribute(): float
     {
-        return $this->received_chunks / $this->total_chunks * 100;
+        return min(100, max(0, $this->received_chunks / $this->total_chunks * 100));
     }
 
     public function isCompleted(): bool
