@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Data\UploadData;
 use App\Exceptions\ChunkCountMismatch;
+use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
 use App\Models\Track;
 use App\Models\Upload;
@@ -29,7 +30,10 @@ class TrackController extends Controller
     }
 
     /**
-     * @throws ChunkCountMismatch|FileCannotBeAdded|FileIsTooBig
+     * @throws FileCannotBeAdded
+     * @throws FileIsTooBig
+     * @throws ChunkCountMismatch
+     * @throws ChunkStorageFailed
      */
     public function store(Request $request)
     {

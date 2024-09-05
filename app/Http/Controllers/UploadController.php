@@ -39,11 +39,14 @@ class UploadController extends Controller
     {
         $user = $request->user();
         $data = UploadData::validateAndCreate($request->all());
+
         $upload = $this->uploadService->store($user, $data);
 
-        $result = $upload->isCompleted() ? $this->addUploadToCollection($user, $upload) : null;
+        $resultData = $upload->isCompleted()
+            ? $this->addUploadToCollection($user, $upload)
+            : null;
 
-        return response()->json(UploadResource::make($upload, $result));
+        return response()->json(UploadResource::make($upload, $resultData));
     }
 
     public function show(Request $request, string $identifier)

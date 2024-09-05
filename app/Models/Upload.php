@@ -61,14 +61,4 @@ class Upload extends Model
             'elapsed_milliseconds' => $milliseconds,
         ]);
     }
-
-    //    public function isPending(): bool
-    //    {
-    //        return $this->status === 'pending';
-    //    }
-    //
-    //    public function isProcessing(): bool
-    //    {
-    //        return $this->status === 'processing';
-    //    }
 }

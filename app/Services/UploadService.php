@@ -11,7 +11,6 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
-use function PHPUnit\Framework\throwException;
 
 class UploadService
 {
@@ -21,19 +20,16 @@ class UploadService
      */
     public function store(User $user, UploadData $data): Upload
     {
-        $upload = $user
-            ->uploads()
-            ->firstOrCreate(['identifier' => $data->identifier], [
-                'name' => pathinfo($data->name, PATHINFO_FILENAME),
-                'file_name' => $this->getFileName($data->name),
-                'mime_type' => $data->type,
-                'size' => $data->size,
-                'chunk_size' => $data->chunkSize,
-                'received_chunks' => $data->chunkNumber - 1,
-                'status' => UploadStatus::PENDING,
-            ]);
+        $upload = $user->uploads()->firstOrCreate(['identifier' => $data->identifier], [
+            'name' => pathinfo($data->name, PATHINFO_FILENAME),
+            'file_name' => $this->getFileName($data->name),
+            'mime_type' => $data->type,
+            'size' => $data->size,
+            'chunk_size' => $data->chunkSize,
+            'received_chunks' => $data->chunkNumber - 1,
+            'status' => UploadStatus::PENDING,
+        ]);
 
-        // Check if was first or created
         if ($upload->wasRecentlyCreated) {
             $upload->refresh();
         }
