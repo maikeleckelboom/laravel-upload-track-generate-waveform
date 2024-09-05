@@ -9,9 +9,11 @@ use App\Models\Media;
 use App\Models\Upload;
 use App\Models\User;
 use App\Services\UploadService;
+use Exception;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 
 class UploadController extends Controller
 {
@@ -54,13 +56,32 @@ class UploadController extends Controller
     }
 
     /**
-     * @throws FileDoesNotExist|FileIsTooBig
+     * @throws FileIsTooBig
+     * @throws FileDoesNotExist
      */
     public function addUploadToCollection(User $user, Upload $upload): \Spatie\MediaLibrary\MediaCollections\Models\Media
     {
-        return $user->addMedia($upload->path)
-            ->withResponsiveImages()
-            ->toMediaCollection();
+        try {
+            $user->addMedia($upload->path)->toMediaCollection();
 
+        } catch (Exception $e) {
+            if ($e instanceof FileDoesNotExist) {
+                $resource = $this->tryFindMediaResource($user, $upload);
+                if ($resource->isEmpty()) {
+                    throw $e;
+                }
+
+                return $resource->first();
+            }
+
+            throw $e;
+        }
+
+        return $user->getMedia()->where('file_name', $upload->file_name)->first();
+    }
+
+    private function tryFindMediaResource(User $user, Upload $upload): MediaCollection
+    {
+        return $user->getMedia()->where('file_name', $upload->file_name);
     }
 }

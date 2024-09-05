@@ -5,16 +5,19 @@ namespace App\Services;
 use App\Data\UploadData;
 use App\Enum\UploadStatus;
 use App\Exceptions\ChunkCountMismatch;
+use App\Exceptions\ChunkStorageFailed;
 use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
+use function PHPUnit\Framework\throwException;
 
 class UploadService
 {
     /**
      * @throws ChunkCountMismatch
+     * @throws ChunkStorageFailed
      */
     public function store(User $user, UploadData $data): Upload
     {
@@ -26,16 +29,18 @@ class UploadService
                 'mime_type' => $data->type,
                 'size' => $data->size,
                 'chunk_size' => $data->chunkSize,
-                'status' => UploadStatus::PENDING,
                 'received_chunks' => $data->chunkNumber - 1,
-            ])
-            ->refresh();
+                'status' => UploadStatus::PENDING,
+            ]);
+
+        // Check if was first or created
+        if ($upload->wasRecentlyCreated) {
+            $upload->refresh();
+        }
 
         $this->addChunk($upload, $data->chunkData);
 
-        $upload->update([
-            'elapsed_milliseconds' => $data->elapsedMilliseconds,
-        ]);
+        $upload->setElapsedMilliseconds($data->elapsedMilliseconds);
 
         if ($this->hasReceivedAllChunks($upload)) {
 
@@ -50,12 +55,17 @@ class UploadService
         return $upload;
     }
 
+    /**
+     * @throws ChunkStorageFailed
+     */
     private function addChunk(Upload $upload, UploadedFile $uploadedFile): void
     {
-        if ($this->storeChunk($upload, $uploadedFile)) {
-            $upload->increment('received_chunks');
-            $upload->save();
+        if (!$this->storeChunk($upload, $uploadedFile)) {
+            throw new ChunkStorageFailed();
         }
+
+        $upload->increment('received_chunks');
+        $upload->save();
     }
 
     private function storeChunk(Upload $upload, UploadedFile $uploadedFile): bool

@@ -13,9 +13,10 @@ class Upload extends Model
         'path',
     ];
     protected $casts = [
-        'chunk_size' => 'int',
         'size' => 'int',
-        'meta' => 'array',
+        'chunk_size' => 'int',
+        'received_chunks' => 'int',
+        'elapsed_milliseconds' => 'int',
     ];
 
     protected $appends = [
@@ -53,4 +54,21 @@ class Upload extends Model
     {
         return $this->status === 'completed';
     }
+
+    public function setElapsedMilliseconds(int $milliseconds): void
+    {
+        $this->update([
+            'elapsed_milliseconds' => $milliseconds,
+        ]);
+    }
+
+    //    public function isPending(): bool
+    //    {
+    //        return $this->status === 'pending';
+    //    }
+    //
+    //    public function isProcessing(): bool
+    //    {
+    //        return $this->status === 'processing';
+    //    }
 }

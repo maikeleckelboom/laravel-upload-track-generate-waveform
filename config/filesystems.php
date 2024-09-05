@@ -35,7 +35,7 @@ return [
             'root' => storage_path('app'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'private',
-            'throw' => true,
+            'throw' => false,
         ],
 
         'local-temporary' => [
@@ -43,7 +43,7 @@ return [
             'root' => storage_path('app/temporary'),
             'url' => env('APP_URL').'/storage/temporary',
             'visibility' => 'private',
-            'throw' => true,
+            'throw' => false,
         ],
 
         'local-test-cases' => [
@@ -51,7 +51,7 @@ return [
             'root' => storage_path('test_cases/app'),
             'url' => env('APP_URL').'/storage/test_cases/app',
             'visibility' => 'private',
-            'throw' => true,
+            'throw' => false,
         ],
 
         'public' => [

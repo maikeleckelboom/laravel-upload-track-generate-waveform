@@ -44,13 +44,16 @@ class UploadResource extends JsonResource
                 'totalChunks' => $this->total_chunks,
                 'totalBytes' => $this->size,
             ],
-            'meta' => [
+            'metrics' => [
                 'elapsedMilliseconds' => $this->elapsed_milliseconds,
-                'transferSpeed' => '0 KB/s',
-                'elapsedDuration' => '00:00',
-                'remainingDuration' => '00:00',
+                'elapsedTime' => '00:00',
+                'remainingTime' => '00:00',
                 'estimatedTimeArrival' => '00:00:00',
+                'transferSpeed' => '0 KB/s',
             ],
+            $this->mergeWhen(!is_null($uploaded), [
+                'data' => MediaResource::make($uploaded),
+            ]),
         ];
     }
 }
