@@ -3,38 +3,33 @@
 namespace App\Services;
 
 
+use App\Exceptions\AudioStreamNotFound;
 use App\Models\Upload;
 use FFMpeg\FFProbe\DataMapping\Stream;
-use ProtoneMedia\LaravelFFMpeg\MediaOpener;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class AudioProcessor
 {
-    public function processMetadata(Upload $upload): array
+    /**
+     * @throws AudioStreamNotFound
+     */
+    public function processMetadata(Upload $upload)
     {
-        $audio = FFMpeg::fromDisk($upload->disk)->open($upload->file_name);
-        $stream = $this->getAudioStream($audio);
+        $probable = FFMpeg::fromDisk($upload->disk)->getFFProbe()->isValid($upload->file_name);
 
-        if (!$stream) {
-            logger()->error("No audio stream found in file '{$upload->file_name}' on disk '{$upload->disk}'");
-            return [];
+        if (!$probable) {
+            throw new AudioStreamNotFound($upload->file_name, $upload->disk);
         }
 
-        $metadata = $this->extractAudioMetadata($stream);
+        logger('probable', [$probable]);
 
-        logger(
-            "Audio file '{$upload->file_name}' on disk '{$upload->disk}' processed successfully",
-            $metadata
-        );
-
-        return $metadata;
-    }
-
-    private function getAudioStream(MediaOpener $audio): ?Stream
-    {
-        return collect($audio->getStreams())
-            ->filter(fn($stream) => $stream->isAudio())
-            ->first();
+//        $stream = FFMpeg::fromDisk($upload->disk)->open($upload->file_name)->getAudioStream();
+//
+//        if (!$stream) {
+//            throw new AudioStreamNotFound($upload->file_name, $upload->disk);
+//        }
+//
+//        return $this->extractAudioMetadata($stream);
     }
 
     private function extractAudioMetadata(Stream $stream): array
@@ -42,13 +37,11 @@ class AudioProcessor
         return [
             'codec_name' => $stream->get('codec_name'),
             'codec_tag_string' => $stream->get('codec_tag_string'),
-            'channels' => $stream->get('channels'),
-            'duration_ts' => $stream->get('duration_ts'),
             'duration' => $stream->get('duration'),
-            'sample_rate' => $stream->get('sample_rate') ?: $stream->get('sample_rate'),
+            'sample_rate' => $stream->get('sample_rate'),
             'bit_rate' => $stream->get('bit_rate'),
             'bits_per_sample' => $stream->get('bits_per_sample') ?: $stream->get('bits_per_raw_sample'),
-            'language' => $stream->get('tags')['language'] ?? null,
+            'channels' => $stream->get('channels'),
         ];
     }
 

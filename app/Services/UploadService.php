@@ -75,17 +75,10 @@ class UploadService
         );
     }
 
-    /**
-     * @throws ChunkCountMismatch
-     */
     private function assembleChunks(Upload $upload): string
     {
         $disk = Storage::disk($upload->disk);
         $chunks = $disk->files($upload->identifier);
-
-        if (count($chunks) !== $upload->total_chunks) {
-            throw new ChunkCountMismatch();
-        }
 
         $destinationPath = $disk->path($upload->file_name);
         $destinationStream = fopen($destinationPath, 'a');
