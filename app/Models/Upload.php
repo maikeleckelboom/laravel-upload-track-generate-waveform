@@ -52,7 +52,11 @@ class Upload extends Model
 
     public function isCompleted(): bool
     {
-        return $this->status === 'completed';
+
+        return $this->size === $this->received_bytes
+            || $this->received_chunks === $this->total_chunks
+            || $this->progress === 100
+            || $this->status === 'completed';
     }
 
     public function setElapsedMilliseconds(int $milliseconds): void

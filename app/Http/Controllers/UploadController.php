@@ -42,11 +42,14 @@ class UploadController extends Controller
 
         $upload = $this->uploadService->store($user, $data);
 
-        $resultData = $upload->isCompleted()
-            ? $this->addUploadToCollection($user, $upload)
-            : null;
+        if($upload->isCompleted()) {
+            $media = $this->addUploadToCollection($user, $upload);
+            $upload->setRelation('media', $media);
+        }
 
-        return response()->json(UploadResource::make($upload, $resultData));
+        return response()
+            ->json(UploadResource::make($upload))
+            ->setStatusCode(201);
     }
 
     public function show(Request $request, string $identifier)
@@ -69,7 +72,9 @@ class UploadController extends Controller
     public function addUploadToCollection(User $user, Upload $upload): \Spatie\MediaLibrary\MediaCollections\Models\Media
     {
         try {
-            return $user->addMedia($upload->path)->toMediaCollection();
+            return $user->addMedia($upload->path)
+                ->withCustomProperties(['upload_id' => $upload->id])
+                ->toMediaCollection('media');
 
         } catch (Exception $e) {
             if ($e instanceof FileDoesNotExist) {

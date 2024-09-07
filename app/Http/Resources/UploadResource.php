@@ -20,6 +20,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $mime_type
  * @property string $name
  * @property int $elapsed_milliseconds
+ * @property ?Media $media
  */
 class UploadResource extends JsonResource
 {
@@ -28,7 +29,7 @@ class UploadResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request, Model|null $data = null): array
+    public function toArray(Request $request): array
     {
         return [
             'identifier' => $this->identifier,
@@ -47,13 +48,14 @@ class UploadResource extends JsonResource
             'metrics' => [
                 'elapsedMilliseconds' => $this->elapsed_milliseconds,
                 'elapsedTime' => gmdate('i:s', $this->elapsed_milliseconds / 1000),
-                'remainingTime' => '00:00',
+                'remainingTime' => '00:00', // TODO: Send metrics from client via headers
                 'estimatedTimeArrival' => '00:00:00',
                 'transferSpeed' => '0 KB/s',
             ],
-            $this->mergeWhen(!is_null($data), [
-                'data' => MediaResource::make($data),
+            $this->mergeWhen(!!$this->media, [
+                'media' => MediaResource::make($this->media),
             ]),
         ];
     }
+
 }

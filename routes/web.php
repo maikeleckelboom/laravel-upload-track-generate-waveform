@@ -33,4 +33,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
             'show' => 'tracks.show',
             'update' => 'tracks.update',
         ]);
+
+
+    Route::get('/media', function () {
+        return response()->json([
+            'message' => 'Media files',
+            'files' => collect(Storage::disk('public')->files('media'))
+                ->map(fn($file) => url(Storage::url($file))),
+        ]);
+    })->name('media');
 });
