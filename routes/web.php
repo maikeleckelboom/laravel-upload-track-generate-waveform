@@ -35,11 +35,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         ]);
 
 
-    Route::get('/media', function () {
-        return response()->json([
-            'message' => 'Media files',
-            'files' => collect(Storage::disk('public')->files('media'))
-                ->map(fn($file) => url(Storage::url($file))),
-        ]);
-    })->name('media');
+    Route::get('/media', fn() => response()->json(
+        auth()->user()->media()->get()
+    ))->name('media');
 });

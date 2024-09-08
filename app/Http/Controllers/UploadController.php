@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Data\UploadData;
+use App\Exceptions\AssembleChunksFailed;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
@@ -30,10 +31,10 @@ class UploadController extends Controller
     }
 
     /**
-     * @throws ChunkCountMismatch
      * @throws FileIsTooBig
      * @throws FileDoesNotExist
      * @throws ChunkStorageFailed
+     * @throws AssembleChunksFailed
      */
     public function store(Request $request)
     {
@@ -41,15 +42,16 @@ class UploadController extends Controller
         $data = UploadData::validateAndCreate($request->all());
 
         $upload = $this->uploadService->store($user, $data);
+        $upload->setElapsedActiveTime($data->elapsedActiveTime);
 
-        if($upload->isCompleted()) {
-            $media = $this->addUploadToCollection($user, $upload);
-            $upload->setRelation('media', $media);
+        if ($upload->isCompleted()) {
+            $this->addUploadToCollection($user, $upload);
+            $upload->delete();
         }
 
         return response()
             ->json(UploadResource::make($upload))
-            ->setStatusCode(201);
+            ->setStatusCode($upload->isCompleted() ? 201 : 202);
     }
 
     public function show(Request $request, string $identifier)
@@ -84,6 +86,8 @@ class UploadController extends Controller
                     throw $e;
                 }
 
+                logger()->warning('Media file does not exist, but found in media collection.');
+
                 return $resource->first();
             }
 
@@ -93,6 +97,9 @@ class UploadController extends Controller
 
     private function tryFindMediaResource(User $user, Upload $upload): MediaCollection
     {
-        return $user->getMedia()->where('file_name', $upload->file_name);
+        return Media::where('custom_properties->upload_id', $upload->id)
+            ->where('disk', $upload->disk)
+            ->orWhere('file_name', $upload->file_name)
+            ->get();
     }
 }

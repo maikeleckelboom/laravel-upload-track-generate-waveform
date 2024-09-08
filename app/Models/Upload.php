@@ -59,7 +59,7 @@ class Upload extends Model
             || $this->status === 'completed';
     }
 
-    public function setElapsedMilliseconds(int $milliseconds): void
+    public function setElapsedActiveTime(int $milliseconds): void
     {
         $this->update([
             'elapsed_milliseconds' => $milliseconds,

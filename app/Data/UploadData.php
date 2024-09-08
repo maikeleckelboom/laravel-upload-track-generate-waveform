@@ -2,6 +2,7 @@
 
 namespace App\Data;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Attributes\Validation\File;
 use Spatie\LaravelData\Attributes\Validation\GreaterThan;
@@ -25,8 +26,14 @@ class UploadData extends Data
         public int          $chunkSize,
         #[File]
         public UploadedFile $chunkData,
-        public ?int         $elapsedMilliseconds = 0,
+        public ?int         $elapsedActiveTime,
     )
     {
+        $this->elapsedActiveTime ??= self::elapsedActiveTimeFromRequest(request());
+    }
+
+    public static function elapsedActiveTimeFromRequest(Request $request): int
+    {
+        return $request->header('X-Elapsed-Active-Time') ?? 0;
     }
 }

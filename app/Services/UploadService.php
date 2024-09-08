@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Data\UploadData;
 use App\Enum\UploadStatus;
+use App\Exceptions\AssembleChunksFailed;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Models\Upload;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
@@ -15,8 +17,8 @@ use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 class UploadService
 {
     /**
-     * @throws ChunkCountMismatch
      * @throws ChunkStorageFailed
+     * @throws AssembleChunksFailed
      */
     public function store(User $user, UploadData $data): Upload
     {
@@ -36,16 +38,10 @@ class UploadService
 
         $this->addChunk($upload, $data->chunkData);
 
-        $upload->setElapsedMilliseconds($data->elapsedMilliseconds);
-
         if ($this->hasReceivedAllChunks($upload)) {
-
-            $upload->update([
-                'path' => $this->assembleChunks($upload),
-                'status' => UploadStatus::COMPLETED,
-            ]);
-
-            $upload->refresh();
+            $upload->path = $this->assembleChunks($upload);
+            $upload->status = UploadStatus::COMPLETED;
+            $upload->save();
         }
 
         return $upload;
@@ -75,22 +71,30 @@ class UploadService
         );
     }
 
+    /**
+     * @throws AssembleChunksFailed
+     */
     private function assembleChunks(Upload $upload): string
     {
         $disk = Storage::disk($upload->disk);
         $chunks = $disk->files($upload->identifier);
 
         $destinationPath = $disk->path($upload->file_name);
-        $destinationStream = fopen($destinationPath, 'a');
+        $destinationStream = fopen($destinationPath, 'w');
 
-        foreach ($chunks as $chunk) {
-            $chunkStream = $disk->readStream($chunk);
-            stream_copy_to_stream($chunkStream, $destinationStream);
-            fclose($chunkStream);
-            $disk->delete($chunk);
+        try {
+            foreach ($chunks as $chunk) {
+                $chunkStream = $disk->readStream($chunk);
+                stream_copy_to_stream($chunkStream, $destinationStream);
+                fclose($chunkStream);
+                $disk->delete($chunk);
+            }
+        } catch (\Exception $e) {
+            throw new AssembleChunksFailed($e->getMessage(), $e->getCode());
+        } finally {
+            fclose($destinationStream);
         }
 
-        fclose($destinationStream);
         $disk->deleteDirectory($upload->identifier);
 
         return $destinationPath;
@@ -107,5 +111,15 @@ class UploadService
         $fileName = $nameGenerator->originalFileName($name);
         $extension = pathinfo($name, PATHINFO_EXTENSION);
         return "{$fileName}.{$extension}";
+    }
+
+    public function extractMetricsFromRequest(Request $request): array
+    {
+        return [
+            'elapsedMs' => $request->header('X-Upload-Elapsed-Milliseconds', 0),
+            'elapsed' => gmdate('i:s', $request->header('X-Upload-Elapsed', 0) / 1000),
+            'eta' => $request->header('X-Upload-ETA', '00:00:00'),
+            'speed' => $request->header('X-Upload-Speed', 0),
+        ];
     }
 }

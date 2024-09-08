@@ -48,13 +48,10 @@ class UploadResource extends JsonResource
             'metrics' => [
                 'elapsedMilliseconds' => $this->elapsed_milliseconds,
                 'elapsedTime' => gmdate('i:s', $this->elapsed_milliseconds / 1000),
-                'remainingTime' => '00:00', // TODO: Send metrics from client via headers
+                'remainingTime' => '00:00',
                 'estimatedTimeArrival' => '00:00:00',
                 'transferSpeed' => '0 KB/s',
             ],
-            $this->mergeWhen(!!$this->media, [
-                'media' => MediaResource::make($this->media),
-            ]),
         ];
     }
 
