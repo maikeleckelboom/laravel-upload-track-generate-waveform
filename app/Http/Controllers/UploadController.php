@@ -42,11 +42,12 @@ class UploadController extends Controller
         $data = UploadData::validateAndCreate($request->all());
 
         $upload = $this->uploadService->store($user, $data);
-        $upload->setElapsedActiveTime($data->elapsedActiveTime);
+
+        $upload->setElapsedTime($data->elapsedTime);
 
         if ($upload->isCompleted()) {
             $this->addUploadToCollection($user, $upload);
-            $upload->delete();
+//            $upload->delete();
         }
 
         return response()
@@ -75,7 +76,6 @@ class UploadController extends Controller
     {
         try {
             return $user->addMedia($upload->path)
-                ->withCustomProperties(['upload_id' => $upload->id])
                 ->toMediaCollection('media');
 
         } catch (Exception $e) {

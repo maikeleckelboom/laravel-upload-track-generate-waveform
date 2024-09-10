@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator;
+
 return [
 
     /*
@@ -77,7 +79,7 @@ return [
     /*
      * The class that contains the strategy for determining a media file's path.
      */
-    'path_generator' => App\PathGenerator::class, // DefaultPathGenerator::class,
+    'path_generator' => DefaultPathGenerator::class, // App\PathGenerator::class,
 
     /*
      * The class that contains the strategy for determining how to remove files.

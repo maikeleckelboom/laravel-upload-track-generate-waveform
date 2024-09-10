@@ -13,11 +13,6 @@ class PathGenerator extends DefaultPathGenerator implements PathGeneratorInterfa
 {
     public function getPath(Media $media): string
     {
-        if ($media->model instanceof Track) {
-            $collectionName = $media->collection_name === 'default' ? '' : $media->collection_name . '/';
-            return "Track/{$media->model->getKey()}/{$collectionName}/";
-        }
-
         return $this->pluralizeModelName($media->model) . '/'
             . $media->model->getKey() . '/'
             . $media->collection_name . '/'

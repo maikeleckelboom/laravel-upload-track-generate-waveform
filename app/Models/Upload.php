@@ -16,7 +16,7 @@ class Upload extends Model
         'size' => 'int',
         'chunk_size' => 'int',
         'received_chunks' => 'int',
-        'elapsed_milliseconds' => 'int',
+        'elapsed_active_time' => 'int',
     ];
 
     protected $appends = [
@@ -59,10 +59,8 @@ class Upload extends Model
             || $this->status === 'completed';
     }
 
-    public function setElapsedActiveTime(int $milliseconds): void
+    public function setElapsedTime(int $milliseconds): void
     {
-        $this->update([
-            'elapsed_milliseconds' => $milliseconds,
-        ]);
+        $this->update(['elapsed_time' => $milliseconds]);
     }
 }

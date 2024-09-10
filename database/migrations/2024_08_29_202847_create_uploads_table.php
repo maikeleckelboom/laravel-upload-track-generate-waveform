@@ -22,12 +22,11 @@ return new class extends Migration {
             $table->unsignedBigInteger('size');
             $table->unsignedBigInteger('chunk_size');
             $table->unsignedBigInteger('received_chunks')->default(0);
-            $table->unsignedBigInteger('elapsed_milliseconds')->nullable();
+            $table->unsignedBigInteger('elapsed_time')->default(0);
             $table->string('path')->nullable();
             $table->string('disk')->default('local-temporary');
             $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
-
             $table->timestamps();
         });
     }

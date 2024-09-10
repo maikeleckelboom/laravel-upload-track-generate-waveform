@@ -5,11 +5,10 @@ namespace App\Services;
 use App\Data\UploadData;
 use App\Enum\UploadStatus;
 use App\Exceptions\AssembleChunksFailed;
-use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Models\Upload;
 use App\Models\User;
-use Illuminate\Http\Request;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
@@ -24,7 +23,7 @@ class UploadService
     {
         $upload = $user->uploads()->firstOrCreate(['identifier' => $data->identifier], [
             'name' => pathinfo($data->name, PATHINFO_FILENAME),
-            'file_name' => $this->getFileName($data->name),
+            'file_name' => $this->formatFileName($data->name),
             'mime_type' => $data->type,
             'size' => $data->size,
             'chunk_size' => $data->chunkSize,
@@ -89,7 +88,7 @@ class UploadService
                 fclose($chunkStream);
                 $disk->delete($chunk);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new AssembleChunksFailed($e->getMessage(), $e->getCode());
         } finally {
             fclose($destinationStream);
@@ -105,21 +104,11 @@ class UploadService
         return $upload->received_chunks === $upload->total_chunks;
     }
 
-    private function getFileName(string $name): string
+    private function formatFileName(string $name): string
     {
         $nameGenerator = new DefaultFileNamer();
         $fileName = $nameGenerator->originalFileName($name);
         $extension = pathinfo($name, PATHINFO_EXTENSION);
         return "{$fileName}.{$extension}";
-    }
-
-    public function extractMetricsFromRequest(Request $request): array
-    {
-        return [
-            'elapsedMs' => $request->header('X-Upload-Elapsed-Milliseconds', 0),
-            'elapsed' => gmdate('i:s', $request->header('X-Upload-Elapsed', 0) / 1000),
-            'eta' => $request->header('X-Upload-ETA', '00:00:00'),
-            'speed' => $request->header('X-Upload-Speed', 0),
-        ];
     }
 }

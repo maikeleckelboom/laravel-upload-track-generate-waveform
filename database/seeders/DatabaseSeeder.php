@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
 //        $erik->follow($testUser);
 //        $joy->follow($testUser);
 
-        $this->call(TrackSeeder::class);
+//        $this->call(TrackSeeder::class);
 
 
     }

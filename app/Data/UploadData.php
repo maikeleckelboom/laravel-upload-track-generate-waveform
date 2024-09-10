@@ -26,14 +26,20 @@ class UploadData extends Data
         public int          $chunkSize,
         #[File]
         public UploadedFile $chunkData,
-        public ?int         $elapsedActiveTime,
+        public ?int         $elapsedTime,
+        public ?int         $remainingTime,
+        public ?int         $uploadSpeed,
     )
     {
-        $this->elapsedActiveTime ??= self::elapsedActiveTimeFromRequest(request());
+        $this->assignMetrics();
     }
 
-    public static function elapsedActiveTimeFromRequest(Request $request): int
+    private function assignMetrics(): void
     {
-        return $request->header('X-Elapsed-Active-Time') ?? 0;
+        [$this->elapsedTime, $this->remainingTime, $this->uploadSpeed] = [
+            $this->elapsedTime ?? (int)request()->header('X-Elapsed-Time', 0),
+            $this->remainingTime ?? (int)request()->header('X-Remaining-Time', 0),
+            $this->uploadSpeed ?? (int)request()->header('X-Upload-Speed', 0),
+        ];
     }
 }
