@@ -22,6 +22,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $elapsed_time
  * @property int $remaining_time
  * @property int $upload_speed
+ * @property int $eta
  */
 class UploadResource extends JsonResource
 {
@@ -50,6 +51,7 @@ class UploadResource extends JsonResource
                 'elapsed'=> $this->elapsed_time,
                 'remaining' => $this->remaining_time,
                 'speed' => $this->upload_speed,
+                'eta' => $this->eta,
             ],
         ];
     }

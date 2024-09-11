@@ -2,7 +2,6 @@
 
 namespace App\Data;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Attributes\Validation\File;
 use Spatie\LaravelData\Attributes\Validation\GreaterThan;
@@ -26,9 +25,11 @@ class UploadData extends Data
         public int          $chunkSize,
         #[File]
         public UploadedFile $chunkData,
-        public ?int         $elapsedTime,
+
+        public ?int       $elapsedTime,
         public ?int         $remainingTime,
-        public ?int         $uploadSpeed,
+        public ?float         $uploadSpeed,
+        public ?int         $eta,
     )
     {
         $this->assignMetrics();
@@ -36,10 +37,11 @@ class UploadData extends Data
 
     private function assignMetrics(): void
     {
-        [$this->elapsedTime, $this->remainingTime, $this->uploadSpeed] = [
+        [$this->elapsedTime, $this->remainingTime, $this->uploadSpeed, $this->eta] = [
             $this->elapsedTime ?? (int)request()->header('X-Elapsed-Time', 0),
             $this->remainingTime ?? (int)request()->header('X-Remaining-Time', 0),
             $this->uploadSpeed ?? (int)request()->header('X-Upload-Speed', 0),
+            $this->eta ?? (int)request()->header('X-Upload-ETA', 0),
         ];
     }
 }

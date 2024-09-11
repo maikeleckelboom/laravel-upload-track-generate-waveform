@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Data\UploadData;
 use App\Exceptions\AssembleChunksFailed;
-use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
 use App\Models\Media;
@@ -43,10 +42,13 @@ class UploadController extends Controller
 
         $upload = $this->uploadService->store($user, $data);
 
-        $upload->setElapsedTime($data->elapsedTime);
+        $upload->updateMetrics($upload, $data);
 
         if ($upload->isCompleted()) {
             $this->addUploadToCollection($user, $upload);
+            $upload->update([
+                'remaining_time' => 0,
+            ]);
 //            $upload->delete();
         }
 
@@ -85,8 +87,6 @@ class UploadController extends Controller
                 if ($resource->isEmpty()) {
                     throw $e;
                 }
-
-                logger()->warning('Media file does not exist, but found in media collection.');
 
                 return $resource->first();
             }

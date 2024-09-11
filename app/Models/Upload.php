@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Data\UploadData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -59,8 +60,13 @@ class Upload extends Model
             || $this->status === 'completed';
     }
 
-    public function setElapsedTime(int $milliseconds): void
+    public function updateMetrics(Upload $upload, UploadData $data): void
     {
-        $this->update(['elapsed_time' => $milliseconds]);
+        $upload->update([
+            'elapsed_time' => $data->elapsedTime,
+            'remaining_time' => $data->remainingTime,
+            'upload_speed' => $data->uploadSpeed,
+            'eta' => $data->eta,
+        ]);
     }
 }

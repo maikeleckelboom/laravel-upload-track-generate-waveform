@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Album;
 use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -19,6 +20,7 @@ return new class extends Migration {
             $table->string('description')->nullable();
 
 
+            $table->foreignIdFor(Album::class)->nullable()->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
