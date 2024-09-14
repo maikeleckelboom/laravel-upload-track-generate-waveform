@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Enum\UploadStatus;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,6 +22,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property float $upload_speed
  * @property int $eta
  * @property string $updated_at
+ * @property string $created_at
  */
 class UploadResource extends JsonResource
 {
@@ -49,20 +49,9 @@ class UploadResource extends JsonResource
             'metrics' => [
                 'elapsed' => $this->elapsed_time,
                 'speed' => $this->upload_speed,
-                'remaining' => $this->getRemainingTime(),
-                'eta' => $this->getEta(),
+                'remaining' => $this->remaining_time,
+                'eta' => $this->eta,
             ],
         ];
-    }
-
-    private function getRemainingTime(): int
-    {
-        if (intval($this->upload_speed) === 0) return 0;
-        return ($this->size - $this->received_bytes) / $this->upload_speed * 1000;
-    }
-
-    private function getEta(): int
-    {
-        return Carbon::parse($this->updated_at)->timestamp + $this->getRemainingTime();
     }
 }

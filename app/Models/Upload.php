@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Data\UploadData;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Upload extends Model
 {
@@ -23,6 +23,8 @@ class Upload extends Model
         'received_bytes',
         'progress',
         'extension',
+        'remaining_time',
+        'eta',
     ];
 
     public function user(): BelongsTo
@@ -50,6 +52,19 @@ class Upload extends Model
         return min(100, max(0, $this->received_chunks / $this->total_chunks * 100));
     }
 
+    public function getRemainingTimeAttribute(): int
+    {
+        if (intval($this->upload_speed) === 0) return 0;
+        return ($this->size - $this->received_bytes) / $this->upload_speed * 1000;
+    }
+
+    public function getEtaAttribute(): int
+    {
+        return $this->isCompleted()
+            ? Carbon::parse($this->updated_at)->timestamp
+            : Carbon::now()->timestamp + $this->remaining_time;
+    }
+
     public function isCompleted(): bool
     {
 
@@ -67,8 +82,4 @@ class Upload extends Model
         ]);
     }
 
-    public function audioMetadata(): HasOne
-    {
-        return $this->hasOne(AudioMetadata::class);
-    }
 }
