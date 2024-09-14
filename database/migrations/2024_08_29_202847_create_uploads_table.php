@@ -14,23 +14,18 @@ return new class extends Migration {
     {
         Schema::create('uploads', function (Blueprint $table) {
             $table->id();
-
             $table->string('identifier')->unique();
             $table->string('name');
             $table->string('file_name');
             $table->string('mime_type');
             $table->unsignedBigInteger('size');
             $table->unsignedBigInteger('chunk_size');
-            $table->unsignedBigInteger('received_chunks')->default(0);
+            $table->unsignedBigInteger('received_chunks');
             $table->string('path')->nullable();
-            $table->string('disk')->default('local-temporary');
-            $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
-
+            $table->string('disk')->default('local');
             $table->unsignedBigInteger('elapsed_time')->default(0);
-            $table->unsignedBigInteger('remaining_time')->default(0);
-            $table->unsignedBigInteger('eta')->default(0);
             $table->float('upload_speed')->default(0);
-
+            $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });

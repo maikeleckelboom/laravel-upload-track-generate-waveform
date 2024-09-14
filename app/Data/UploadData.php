@@ -25,23 +25,20 @@ class UploadData extends Data
         public int          $chunkSize,
         #[File]
         public UploadedFile $chunkData,
-
-        public ?int       $elapsedTime,
-        public ?int         $remainingTime,
-        public ?float         $uploadSpeed,
-        public ?int         $eta,
+        public ?float       $uploadSpeed,
+        public ?int         $elapsedTime
     )
     {
-        $this->assignMetrics();
+        foreach ($this->extractMetrics() as $key => $value) {
+            $this->$key ??= $value;
+        }
     }
 
-    private function assignMetrics(): void
+    private function extractMetrics(): array
     {
-        [$this->elapsedTime, $this->remainingTime, $this->uploadSpeed, $this->eta] = [
-            $this->elapsedTime ?? (int)request()->header('X-Elapsed-Time', 0),
-            $this->remainingTime ?? (int)request()->header('X-Remaining-Time', 0),
-            $this->uploadSpeed ?? (int)request()->header('X-Upload-Speed', 0),
-            $this->eta ?? (int)request()->header('X-Upload-ETA', 0),
+        return [
+            'uploadSpeed' => (float)request()->header('X-Upload-Speed', 0),
+            'elapsedTime' => (int)request()->header('X-Elapsed-Time', 0)
         ];
     }
 }

@@ -5,14 +5,12 @@ namespace App\Models;
 use App\Data\UploadData;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Upload extends Model
 {
     protected $guarded = [];
 
-    protected $hidden = [
-        'path',
-    ];
     protected $casts = [
         'size' => 'int',
         'chunk_size' => 'int',
@@ -24,6 +22,7 @@ class Upload extends Model
         'total_chunks',
         'received_bytes',
         'progress',
+        'extension',
     ];
 
     public function user(): BelongsTo
@@ -33,7 +32,7 @@ class Upload extends Model
 
     public function getExtensionAttribute(): string
     {
-        return pathinfo($this->file_name, PATHINFO_EXTENSION);
+        return pathinfo($this->name, PATHINFO_EXTENSION);
     }
 
     public function getReceivedBytesAttribute(): int
@@ -60,13 +59,16 @@ class Upload extends Model
             || $this->status === 'completed';
     }
 
-    public function updateMetrics(Upload $upload, UploadData $data): void
+    public function updateMetrics(UploadData $data): void
     {
-        $upload->update([
+        $this->update([
             'elapsed_time' => $data->elapsedTime,
-            'remaining_time' => $data->remainingTime,
             'upload_speed' => $data->uploadSpeed,
-            'eta' => $data->eta,
         ]);
+    }
+
+    public function audioMetadata(): HasOne
+    {
+        return $this->hasOne(AudioMetadata::class);
     }
 }

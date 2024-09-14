@@ -22,8 +22,8 @@ class UploadService
     public function store(User $user, UploadData $data): Upload
     {
         $upload = $user->uploads()->firstOrCreate(['identifier' => $data->identifier], [
-            'name' => pathinfo($data->name, PATHINFO_FILENAME),
-            'file_name' => $this->formatFileName($data->name),
+            'file_name' => $data->name,
+            'name' => $data->name,
             'mime_type' => $data->type,
             'size' => $data->size,
             'chunk_size' => $data->chunkSize,
@@ -77,6 +77,8 @@ class UploadService
     {
         $disk = Storage::disk($upload->disk);
         $chunks = $disk->files($upload->identifier);
+
+        logger($upload->file_name);
 
         $destinationPath = $disk->path($upload->file_name);
         $destinationStream = fopen($destinationPath, 'w');

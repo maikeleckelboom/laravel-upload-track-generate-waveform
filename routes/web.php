@@ -6,27 +6,26 @@ use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => [
-    'message' => 'Welcome to the API',
     'time' => now()->toDateTimeString(),
 ]);
 
 require __DIR__ . '/auth.php';
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
-    Route::get('/user', UserController::class)
-        ->name('user');
+
+    Route::get('/user', UserController::class)->name('user');
 
     Route::resource('upload', UploadController::class)
-        ->except(['create', 'edit'])
+        ->only(['index', 'store', 'update', 'destroy'])
         ->names([
             'index' => 'upload.index',
             'store' => 'upload.store',
-            'show' => 'upload.show',
+            'update' => 'upload.update',
             'destroy' => 'upload.destroy',
         ]);
 
     Route::resource('track', TrackController::class)
-        ->except(['create', 'edit'])
+        ->only(['index', 'store', 'show', 'update'])
         ->names([
             'index' => 'tracks.index',
             'store' => 'tracks.store',
@@ -34,8 +33,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
             'update' => 'tracks.update',
         ]);
 
+    Route::post('/track', [TrackController::class, 'store'])->name('track.store');
 
-    Route::get('/media', fn() => response()->json(
-        auth()->user()->media()->get()
-    ))->name('media');
+    Route::get('/media', fn() => response()->json(auth()->user()->media()->get()))->name('media');
 });

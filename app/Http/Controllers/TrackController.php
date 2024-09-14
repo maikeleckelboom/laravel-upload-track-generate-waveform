@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Data\UploadData;
+use App\Exceptions\AssembleChunksFailed;
+use App\Exceptions\AudioStreamNotFound;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
@@ -34,20 +36,29 @@ class TrackController extends Controller
      * @throws FileIsTooBig
      * @throws ChunkCountMismatch
      * @throws ChunkStorageFailed
+     * @throws AssembleChunksFailed
+     * @throws AudioStreamNotFound
      */
     public function store(Request $request)
     {
         $user = $request->user();
+        $data = UploadData::validateAndCreate($request->all());
 
-        $upload = $this->uploadService->store(
-            $user,
-            UploadData::validateAndCreate($request->all())
-        );
+        $upload = $this->uploadService->store($user, $data);
+        $upload->updateMetrics($data);
 
         if ($upload->isCompleted()) {
-            $track = $user->tracks()->create(['title' => $upload->name]);
-            $metadata = $this->audioProcessor->processMetadata($upload);
-            $track->audioMetadata()->create($metadata);
+
+
+//            $track = $user->tracks()->create([
+//                'title' => $upload->name
+//            ]);
+//
+//            $metadata = $this->audioProcessor->process($upload);
+//
+//            $track->audioMetadata()->create($metadata);
+
+            return response()->json(UploadResource::make($upload));
         }
 
         return response()->json(UploadResource::make($upload));

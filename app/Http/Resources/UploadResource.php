@@ -3,10 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Enum\UploadStatus;
-use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $identifier
@@ -21,8 +20,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $name
  * @property int $elapsed_time
  * @property int $remaining_time
- * @property int $upload_speed
+ * @property float $upload_speed
  * @property int $eta
+ * @property string $updated_at
  */
 class UploadResource extends JsonResource
 {
@@ -45,15 +45,24 @@ class UploadResource extends JsonResource
                 'receivedChunks' => $this->received_chunks,
                 'receivedBytes' => $this->received_bytes,
                 'totalChunks' => $this->total_chunks,
-                'totalBytes' => $this->size,
             ],
             'metrics' => [
-                'elapsed'=> $this->elapsed_time,
-                'remaining' => $this->remaining_time,
+                'elapsed' => $this->elapsed_time,
                 'speed' => $this->upload_speed,
-                'eta' => $this->eta,
+                'remaining' => $this->getRemainingTime(),
+                'eta' => $this->getEta(),
             ],
         ];
     }
 
+    private function getRemainingTime(): int
+    {
+        if (intval($this->upload_speed) === 0) return 0;
+        return ($this->size - $this->received_bytes) / $this->upload_speed * 1000;
+    }
+
+    private function getEta(): int
+    {
+        return Carbon::parse($this->updated_at)->timestamp + $this->getRemainingTime();
+    }
 }

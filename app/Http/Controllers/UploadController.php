@@ -41,20 +41,29 @@ class UploadController extends Controller
         $data = UploadData::validateAndCreate($request->all());
 
         $upload = $this->uploadService->store($user, $data);
-
-        $upload->updateMetrics($upload, $data);
+        $upload->updateMetrics($data);
 
         if ($upload->isCompleted()) {
             $this->addUploadToCollection($user, $upload);
-            $upload->update([
-                'remaining_time' => 0,
-            ]);
-//            $upload->delete();
         }
+
+        return response()->json(UploadResource::make($upload));
+    }
+
+    public function update(Request $request, string $identifier)
+    {
+        $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
+
+        $validated = $request->validate([
+            'upload_speed' => 'numeric',
+            'elapsed_time' => 'integer'
+        ]);
+
+        $upload->update($validated);
 
         return response()
             ->json(UploadResource::make($upload))
-            ->setStatusCode($upload->isCompleted() ? 201 : 202);
+            ->setStatusCode(202);
     }
 
     public function show(Request $request, string $identifier)
@@ -67,7 +76,7 @@ class UploadController extends Controller
     {
         $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
         $upload->delete();
-        return response()->json(null, 204);
+        return response()->noContent();
     }
 
     /**
@@ -78,6 +87,7 @@ class UploadController extends Controller
     {
         try {
             return $user->addMedia($upload->path)
+                ->withCustomProperties(['upload_id' => $upload->id])
                 ->toMediaCollection('media');
 
         } catch (Exception $e) {
