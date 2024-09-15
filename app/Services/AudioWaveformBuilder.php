@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 
-class WaveformBuilder
+class AudioWaveformBuilder
 {
     protected string $inputFilename;
     protected string $outputFilename;
@@ -92,22 +92,22 @@ class WaveformBuilder
         return $this;
     }
 
-    public function generateWaveform(): bool
+    public function generate(): bool
     {
         $builder = new ShellCommandBuilder();
         $shellCommand = $builder
             ->setCommand("audiowaveform")
-            ->addOption('-i', $this->inputFilename)
-            ->addOption('-o', $this->outputFilename)
-            ->addOption('--bits', $this->bits)
-            ->addOption('--width', $this->width)
-            ->addOption('--height', $this->height)
+            ->addOption('--input-filename', $this->inputFilename)
+            ->addOption('--output-filename', $this->outputFilename)
+            ->addOption('--amplitude-scale', $this->amplitudeScale)
             ->addOption('--background-color', $this->backgroundColor)
             ->addOption('--waveform-color', $this->waveformColor)
             ->addOption('--waveform-style', $this->waveformStyle)
             ->addOption('--bar-width', $this->barWidth)
             ->addOption('--bar-gap', $this->barGap)
-            ->addOption('--amplitude-scale', $this->amplitudeScale)
+            ->addOption('--bits', $this->bits)
+            ->addOption('--width', $this->width)
+            ->addOption('--height', $this->height)
             ->addOption('--end', $this->endTime)
             ->getCommand();
 

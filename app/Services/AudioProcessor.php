@@ -10,8 +10,7 @@ class AudioProcessor
 {
     public function process(Track $track): void
     {
-        $track->duration = $this->getDurationInSeconds($track);
-        $track->save();
+
     }
 
     public function getDurationInSeconds(Track $track): float

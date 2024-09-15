@@ -8,7 +8,7 @@ use App\Exceptions\AudioStreamNotFound;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
-use App\Jobs\CreateWaveformData;
+use App\Jobs\CreateAudioWaveform;
 use App\Models\Track;
 use App\Services\AudioProcessor;
 use App\Services\UploadService;
@@ -54,7 +54,7 @@ class TrackController extends Controller
             $track->duration = $this->audioProcessor->getDurationInSeconds($track);
             $track->save();
 
-            CreateWaveformData::dispatch($track);
+            CreateAudioWaveform::dispatch($track);
         }
 
         return response()->json(UploadResource::make($upload));
