@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 use App\Exceptions\AssembleChunksFailed;
 use App\Exceptions\ChunkStorageFailed;
 use App\Models\Upload;

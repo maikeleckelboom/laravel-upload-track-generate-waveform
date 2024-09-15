@@ -12,6 +12,7 @@ use App\Jobs\CreateWaveformData;
 use App\Models\Track;
 use App\Services\AudioProcessor;
 use App\Services\UploadService;
+use App\Services\WaveformGenerator;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -19,8 +20,8 @@ use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 class TrackController extends Controller
 {
     public function __construct(
-        private readonly UploadService  $uploadService,
-        private readonly AudioProcessor $audioProcessor
+        private readonly UploadService     $uploadService,
+        private readonly AudioProcessor    $audioProcessor,
     )
     {
     }
@@ -49,12 +50,9 @@ class TrackController extends Controller
 
             $track = $user->tracks()->create(['title' => $upload->name]);
 
-            $track->addMediaFromDisk($upload->file_name, $upload->disk)->toMediaLibrary('audio') ;
-
-            $track = $this->audioProcessor->process($track);
- 
-//            $track->duration = $this->audioProcessor->getDurationInSeconds($track);
-//            $track->save();
+            $track->addMediaFromDisk($upload->file_name, $upload->disk)->toMediaLibrary('audio');
+            $track->duration = $this->audioProcessor->getDurationInSeconds($track);
+            $track->save();
 
             CreateWaveformData::dispatch($track);
         }
@@ -64,7 +62,13 @@ class TrackController extends Controller
 
     public function show(Request $request, Track $track)
     {
-        return response()->json($track);
+        $waveform = $track->getFirstMedia('audio')->getPath() . '.dat';
+
+        return response()->json([
+            'track' => $track,
+            'waveform' => $waveform,
+            'image' => $track->getFirstMedia('audio')->getUrl() . '.png',
+        ]);
     }
 
     public function update(Request $request, Track $track)
@@ -77,5 +81,12 @@ class TrackController extends Controller
     {
         $track->delete();
         return response()->json(['message' => 'Track deleted']);
+    }
+
+    public function waveform(Request $request, Track $track)
+    {
+        $audio = $track->getFirstMedia('audio');
+        $waveform = $audio->getPath() . '.dat';
+        return response()->file($waveform);
     }
 }

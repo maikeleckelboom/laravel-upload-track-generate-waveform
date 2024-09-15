@@ -33,6 +33,21 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
             'update' => 'tracks.update',
         ]);
 
+    // storage
+    Route::get('/storage/{path}', function () {
+
+        $path = request()->path;
+        $path = storage_path("app/{$path}");
+        if (!file_exists($path)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+        return response()->file($path);
+
+    })->name('storage');
+
+
+    Route::get('/track/{track}/waveform', [TrackController::class, 'waveform'])->name('track.waveform');
+
     Route::post('/track', [TrackController::class, 'store'])->name('track.store');
 
     Route::get('/media', fn() => response()->json(auth()->user()->media()->get()))->name('media');

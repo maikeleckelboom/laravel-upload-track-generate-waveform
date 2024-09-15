@@ -2,7 +2,6 @@
 
 namespace App;
 
-use App\Models\Track;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Pluralizer;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
