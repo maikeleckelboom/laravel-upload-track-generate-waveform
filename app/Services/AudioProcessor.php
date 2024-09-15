@@ -3,45 +3,50 @@
 namespace App\Services;
 
 
-use App\Exceptions\AudioStreamNotFound;
-use App\Models\Upload;
+use App\Models\Track;
 use FFMpeg\FFProbe\DataMapping\Stream;
+use FFMpeg\Format\Audio\Mp3;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class AudioProcessor
 {
-    /**
-     * @throws AudioStreamNotFound
-     */
-    public function process(Upload $upload): array
+    public function process(Track $track): Track
     {
-        $probable = FFMpeg::fromDisk($upload->disk)->getFFProbe()->isValid($upload->file_name);
-
-        if (!$probable) {
-            throw new AudioStreamNotFound($upload->file_name, $upload->disk);
-        }
-
-        $audio = FFMpeg::fromDisk($upload->disk)->open($upload->file_name);
-
-        $audio->export()
-            ->toDisk($upload->disk)
-            ->inFormat(new \FFMpeg\Format\Audio\Wav)
-            ->save($upload->file_name . '.wav');
-
-        $audio = FFMpeg::fromDisk($upload->disk)->open($upload->file_name . '.wav');
-
-        return $this->extractAudioMetadata($audio->getAudioStream());
+        $mp3Stream = $this->convertToMp3($track);
+        $track->duration = $mp3Stream->get('duration');
+        $track->save();
+        return $track;
     }
 
-    private function extractAudioMetadata(Stream $stream): array
+    public function getDurationInSeconds(Track $track): int
     {
-        return [
-            'codec_name' => $stream->get('codec_name'),
-            'duration' => $stream->get('duration'),
-            'sample_rate' => $stream->get('sample_rate'),
-            'bit_rate' => $stream->get('bit_rate'),
-            'bits_per_sample' => $stream->get('bits_per_sample') ?: $stream->get('bits_per_raw_sample')
-        ];
+        $audio = $track->getFirstMedia('audio');
+        $opener = FFMpeg::fromDisk($audio->disk)->open($audio->getPathRelativeToRoot());
+        return $opener->getAudioStream()->get('duration');
     }
 
+    private function convertToMp3(Track $track): Stream
+    {
+        $audio = $track->getFirstMedia('audio');
+        $opener = FFMpeg::fromDisk($audio->disk)->open($audio->getPathRelativeToRoot());
+
+        return $opener->export()
+            ->toDisk($audio->disk)
+            ->inFormat(new Mp3)
+            ->save($audio->getPath())->getAudioStream();
+    }
+
+//    private function processAudioStream(Stream $stream): array
+//    {
+//        return [
+//            'codec_name' => $stream->get('codec_name'),
+//            'duration' => $stream->get('duration'),
+//            'duration_ts' => $stream->get('duration_ts'),
+//            'sample_rate' => $stream->get('sample_rate'),
+//            'bit_rate' => $stream->get('bit_rate'),
+//            'bits_per_sample' => $stream->get('bits_per_sample') ?: $stream->get('bits_per_raw_sample'),
+//            'start_time' => $stream->get('start_time'),
+//            'channels' => $stream->get('channels'),
+//        ];
+//    }
 }

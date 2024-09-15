@@ -8,8 +8,8 @@ use App\Exceptions\AudioStreamNotFound;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunkStorageFailed;
 use App\Http\Resources\UploadResource;
+use App\Jobs\CreateWaveformData;
 use App\Models\Track;
-use App\Models\Upload;
 use App\Services\AudioProcessor;
 use App\Services\UploadService;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ class TrackController extends Controller
     public function index(Request $request)
     {
         $tracks = $request->user()->tracks()->get();
-        return response()->json($tracks->load('audioMetadata'));
+        return response()->json($tracks);
     }
 
     /**
@@ -41,24 +41,22 @@ class TrackController extends Controller
      */
     public function store(Request $request)
     {
-        $user = $request->user();
         $data = UploadData::validateAndCreate($request->all());
 
-        $upload = $this->uploadService->store($user, $data);
-        $upload->updateMetrics($data);
+        $upload = $this->uploadService->store($user = $request->user(), $data);
 
         if ($upload->isCompleted()) {
 
+            $track = $user->tracks()->create(['title' => $upload->name]);
 
-//            $track = $user->tracks()->create([
-//                'title' => $upload->name
-//            ]);
-//
-//            $metadata = $this->audioProcessor->process($upload);
-//
-//            $track->audioMetadata()->create($metadata);
+            $track->addMediaFromDisk($upload->file_name, $upload->disk)->toMediaLibrary('audio') ;
 
-            return response()->json(UploadResource::make($upload));
+            $track = $this->audioProcessor->process($track);
+ 
+//            $track->duration = $this->audioProcessor->getDurationInSeconds($track);
+//            $track->save();
+
+            CreateWaveformData::dispatch($track);
         }
 
         return response()->json(UploadResource::make($upload));
@@ -66,7 +64,7 @@ class TrackController extends Controller
 
     public function show(Request $request, Track $track)
     {
-        return response()->json($track->load('audioMetadata'));
+        return response()->json($track);
     }
 
     public function update(Request $request, Track $track)

@@ -14,11 +14,11 @@ return new class extends Migration {
         Schema::create('audio_metadata', function (Blueprint $table) {
             $table->id();
             $table->string('codec_name')->comment('The codec used to encode the audio');
-            $table->unsignedInteger('duration')->comment('Duration in seconds');
+            $table->float('duration')->nullable()->comment('Duration in seconds');
+            $table->unsignedBigInteger('duration_ts')->nullable()->comment('Duration in milliseconds');
             $table->unsignedInteger('sample_rate')->comment('The rate of capture and playback');
-            $table->unsignedInteger('bit_rate')->comment('The number of bits transmitted per second');
+            $table->unsignedInteger('bit_rate')->nullable()->comment('The number of bits transmitted per second');
             $table->unsignedInteger('bits_per_sample')->nullable()->comment('Bit depth or sample size (8, 16, 24, 32)');
-            $table->unsignedInteger('channels')->comment('Number of channels');
             $table->foreignIdFor(Track::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });

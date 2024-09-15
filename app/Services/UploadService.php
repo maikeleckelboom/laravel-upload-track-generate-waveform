@@ -2,16 +2,16 @@
 
 namespace App\Services;
 
-use App\Data\UploadData;
-use App\Enum\UploadStatus;
+use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 use App\Exceptions\AssembleChunksFailed;
 use App\Exceptions\ChunkStorageFailed;
 use App\Models\Upload;
 use App\Models\User;
-use Exception;
+use App\Data\UploadData;
+use App\Enum\UploadStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
+use Exception;
 
 class UploadService
 {
@@ -23,7 +23,7 @@ class UploadService
     {
         $upload = $user->uploads()->firstOrCreate(['identifier' => $data->identifier], [
             'file_name' => $data->name,
-            'name' => $data->name,
+            'name' => pathinfo($data->name, PATHINFO_FILENAME),
             'mime_type' => $data->type,
             'size' => $data->size,
             'chunk_size' => $data->chunkSize,
@@ -42,6 +42,8 @@ class UploadService
             $upload->status = UploadStatus::COMPLETED;
             $upload->save();
         }
+
+        $upload->updateMetrics($data);
 
         return $upload;
     }
@@ -64,7 +66,7 @@ class UploadService
     private function storeChunk(Upload $upload, UploadedFile $uploadedFile): bool
     {
         return $uploadedFile->storeAs(
-            $upload->identifier,
+            "chunks/{$upload->identifier}",
             $upload->received_chunks,
             ['disk' => $upload->disk]
         );
@@ -76,9 +78,7 @@ class UploadService
     private function assembleChunks(Upload $upload): string
     {
         $disk = Storage::disk($upload->disk);
-        $chunks = $disk->files($upload->identifier);
-
-        logger($upload->file_name);
+        $chunks = $disk->files("chunks/{$upload->identifier}");
 
         $destinationPath = $disk->path($upload->file_name);
         $destinationStream = fopen($destinationPath, 'w');
@@ -96,7 +96,7 @@ class UploadService
             fclose($destinationStream);
         }
 
-        $disk->deleteDirectory($upload->identifier);
+        $disk->deleteDirectory("chunks/{$upload->identifier}");
 
         return $destinationPath;
     }
@@ -104,13 +104,5 @@ class UploadService
     private function hasReceivedAllChunks(Upload $upload): bool
     {
         return $upload->received_chunks === $upload->total_chunks;
-    }
-
-    private function formatFileName(string $name): string
-    {
-        $nameGenerator = new DefaultFileNamer();
-        $fileName = $nameGenerator->originalFileName($name);
-        $extension = pathinfo($name, PATHINFO_EXTENSION);
-        return "{$fileName}.{$extension}";
     }
 }

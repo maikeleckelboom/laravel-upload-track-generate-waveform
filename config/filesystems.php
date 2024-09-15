@@ -30,6 +30,14 @@ return [
 
     'disks' => [
 
+        'tracks' => [
+            'driver' => 'local',
+            'root' => storage_path('app/tracks'),
+            'url' => env('APP_URL').'/storage/tracks',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),

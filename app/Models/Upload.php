@@ -15,7 +15,8 @@ class Upload extends Model
         'size' => 'int',
         'chunk_size' => 'int',
         'received_chunks' => 'int',
-        'elapsed_active_time' => 'int',
+        'elapsed_time' => 'int',
+        'upload_speed' => 'float'
     ];
 
     protected $appends = [
@@ -67,7 +68,6 @@ class Upload extends Model
 
     public function isCompleted(): bool
     {
-
         return $this->size === $this->received_bytes
             || $this->received_chunks === $this->total_chunks
             || $this->progress === 100
@@ -78,7 +78,7 @@ class Upload extends Model
     {
         $this->update([
             'elapsed_time' => $data->elapsedTime,
-            'upload_speed' => $data->uploadSpeed,
+            'upload_speed' => $data->uploadSpeed
         ]);
     }
 
