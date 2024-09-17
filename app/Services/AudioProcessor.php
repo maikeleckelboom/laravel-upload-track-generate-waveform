@@ -3,21 +3,41 @@
 namespace App\Services;
 
 
+use App\Format\Audio\Opus;
 use App\Models\Track;
-use FFMpeg\Format\Audio\Flac;
-use Illuminate\Support\Facades\Storage;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class AudioProcessor
 {
+    private const string PLAYBACK_FORMAT = 'opus';
+
     public function process(Track $track): void
     {
-        if (!$this->isValidFormat($track)) {
-            $this->convertAudioFormat($track);
+        if ($this->isPlaybackFormat($track->getFirstMedia('audio')->extension)) {
+            $this->addOriginalFileAsPlayback($track);
+        } else {
+            $this->addConvertedFileAsPlayback($track);
         }
 
         $track->duration = $this->getDurationInSeconds($track);
         $track->save();
+    }
+
+    private function isPlaybackFormat(string $format): bool
+    {
+        return $format === self::PLAYBACK_FORMAT;
+    }
+
+    private function addOriginalFileAsPlayback(Track $track): void
+    {
+        $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
+        $track->addMedia($original->getPath())
+            ->preservingOriginal()
+            ->withCustomProperties([
+                'format' => $original->extension,
+                'type' => 'playback'
+            ])
+            ->toMediaLibrary('audio', 'playback');
     }
 
     public function getDurationInSeconds(Track $track): float
@@ -27,29 +47,36 @@ class AudioProcessor
         return $opener->getAudioStream()->get('duration');
     }
 
-    public function convertAudioFormat(Track $track): void
+    public function addConvertedFileAsPlayback(Track $track): void
     {
         $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
 
-        $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
+        $ffmpeg = FFMpeg::fromDisk($original->disk)
 
-        $outputFilename = $this->convertToFlacFormat($original->getPathRelativeToRoot());
+            ->open($original->getPathRelativeToRoot());
+
+        $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot());
 
         $ffmpeg->export()
             ->toDisk($original->disk)
-            ->inFormat(new Flac)
+            ->inFormat(new Opus)
+            ->addFilter('-strict')
+            ->addFilter('-2')
             ->save($outputFilename);
 
         $track->addMediaFromDisk($outputFilename, $original->disk)
-            ->withCustomProperties(['format' => 'flac'])
-            ->toMediaLibrary('audio', 'conversion');
+            ->withCustomProperties([
+                'format' => self::PLAYBACK_FORMAT,
+                'type' => 'playback'
+            ])
+            ->toMediaLibrary('audio', 'playback');
     }
 
-    private function convertToFlacFormat(string $path): string
+    private function convertToPlaybackFormat(string $path): string
     {
         $dirname = pathinfo($path, PATHINFO_DIRNAME);
         $filename = pathinfo($path, PATHINFO_FILENAME);
-        return "{$dirname}/{$filename}.flac";
+        return "{$dirname}/{$filename}." . self::PLAYBACK_FORMAT;
     }
 
     private function isValidFormat(Track $track): bool

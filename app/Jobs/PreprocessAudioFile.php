@@ -26,10 +26,6 @@ class PreprocessAudioFile implements ShouldQueue
      */
     public function handle(): void
     {
-
-        $this->track->duration = $this->audioProcessor->getDurationInSeconds($this->track);
-        $this->track->save();
-
-        $this->audioProcessor->convertAudioFormat($this->track);
+        $this->audioProcessor->process($this->track);
     }
 }

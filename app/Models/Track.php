@@ -17,7 +17,11 @@ class Track extends Model implements HasMedia
 
     protected $guarded = [];
 
-    protected $appends = ['waveform_image_url', 'waveform_data_url', 'stream_url'];
+    protected $appends = [
+        'waveform_image_url',
+        'waveform_data_url',
+        'playback_stream_url'
+    ];
 
     public function user(): BelongsTo
     {
@@ -39,25 +43,27 @@ class Track extends Model implements HasMedia
         return $this->belongsToMany(Playlist::class);
     }
 
-    public function getStreamPathAttribute(): string
+    public function getPlaybackStreamPathAttribute(): string
     {
         return "track/{$this->id}/stream";
     }
 
-    public function getStreamUrlAttribute(): string
+    public function getPlaybackStreamUrlAttribute(): ?string
     {
-        return $this->getMedia('audio', fn($file) => $file->getCustomProperty('format') === 'flac')
+        return $this->getMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback')
             ->first()
             ?->getUrl();
     }
 
-    public function getWaveformDataUrlAttribute(): string|null
+    public function getWaveformDataUrlAttribute(): ?string
     {
         return $this->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'binary')?->getUrl();
     }
 
-    public function getWaveformImageUrlAttribute(): string|null
+    public function getWaveformImageUrlAttribute(): ?string
     {
         return $this->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'image')?->getUrl();
     }
+
+
 }

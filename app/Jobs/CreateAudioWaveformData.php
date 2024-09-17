@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Str;
 
-class CreateAudioWaveform implements ShouldQueue
+class CreateAudioWaveformData implements ShouldQueue
 {
     use Queueable;
 
@@ -21,12 +21,16 @@ class CreateAudioWaveform implements ShouldQueue
 
     public function handle(): void
     {
-        $flacConversion = $this->track
-            ->getMedia('audio', fn($file) => $file->getCustomProperty('format') === 'flac')
+        $playbackAudio = $this->track
+            ->getMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback')
             ->first();
 
-        $inputFilename = $flacConversion->getPath();
-        $outputFilename = Str::replaceLast('flac', 'dat', $inputFilename);
+
+        $outputFilename = Str::replaceLast(
+            $playbackAudio->getCustomProperty('format'),
+            'dat',
+            $inputFilename = $playbackAudio->getPath()
+        );
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))

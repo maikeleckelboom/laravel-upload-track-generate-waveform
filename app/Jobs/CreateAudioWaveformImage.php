@@ -33,11 +33,10 @@ class CreateAudioWaveformImage implements ShouldQueue
             ->setOutputFilename(escapeshellarg($outputFilename))
             ->setWaveformStyle('normal')
             ->setWaveformColor('D2D1D9')
-            ->setWidth(1280)
-            ->setHeight(100)
             ->setBarWidth(1)
             ->setBarGap(0)
-            ->setBits(8)
+            ->setWidth(1200)
+            ->setHeight(100)
             ->setEndTime($this->track->duration)
             ->generate();
 

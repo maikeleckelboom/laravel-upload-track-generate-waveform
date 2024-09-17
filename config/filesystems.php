@@ -38,6 +38,14 @@ return [
             'throw' => false,
         ],
 
+        'playback' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/playback'),
+            'url' => env('APP_URL') . '/storage/private/playback',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
         'conversion' => [
             'driver' => 'local',
             'root' => storage_path('app/private/conversion'),

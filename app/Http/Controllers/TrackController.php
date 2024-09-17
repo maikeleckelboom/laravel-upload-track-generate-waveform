@@ -8,7 +8,7 @@ use App\Exceptions\ChunkCannotBeStored;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
-use App\Jobs\CreateAudioWaveform;
+use App\Jobs\CreateAudioWaveformData;
 use App\Jobs\CreateAudioWaveformImage;
 use App\Jobs\PreprocessAudioFile;
 use App\Models\Track;
@@ -51,7 +51,7 @@ class TrackController extends Controller
                 ->toMediaLibrary('audio');
 
             PreprocessAudioFile::dispatch($track);
-            CreateAudioWaveform::dispatch($track);
+            CreateAudioWaveformData::dispatch($track);
             CreateAudioWaveformImage::dispatch($track);
 
 
@@ -90,26 +90,6 @@ class TrackController extends Controller
     public function destroy(Request $request, Track $track)
     {
         $track->delete();
-        return response()->json(['message' => 'Track deleted']);
+        return response()->noContent();
     }
-
-    public function waveformData(Request $request, Track $track)
-    {
-        $waveform = $track
-            ->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('format') === 'dat')
-            ->getPath();
-
-        return response()->file($waveform);
-    }
-
-    public function waveformImage(Request $request,  Track $track)
-    {
-        $waveform = $track
-            ->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'image')
-            ->getPath();
-
-        return response()->file($waveform);
-    }
-
-
 }
