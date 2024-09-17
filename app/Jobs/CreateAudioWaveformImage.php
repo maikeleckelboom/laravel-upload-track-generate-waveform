@@ -22,11 +22,11 @@ class CreateAudioWaveformImage implements ShouldQueue
     public function handle(): void
     {
         $binaryConversion = $this->track
-            ->getMedia('waveform', fn($file) => $file->getCustomProperty('format') === 'dat')
+            ->getMedia('waveform', fn($file) => $file->getCustomProperty('format') === 'json')
             ->first();
 
         $inputFilename = $binaryConversion->getPath();
-        $outputFilename = Str::replaceLast('dat', 'png', $inputFilename);
+        $outputFilename = Str::replaceLast('json', 'png', $inputFilename);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))

@@ -13,7 +13,7 @@ class AudioProcessor
 
     public function process(Track $track): void
     {
-        if ($this->isPlaybackFormat($track->getFirstMedia('audio')->extension)) {
+        if ($this->isValidAsPlayback($track)) {
             $this->addOriginalFileAsPlayback($track);
         } else {
             $this->addConvertedFileAsPlayback($track);
@@ -23,8 +23,9 @@ class AudioProcessor
         $track->save();
     }
 
-    private function isPlaybackFormat(string $format): bool
+    private function isValidAsPlayback(Track $track): bool
     {
+        $format = $track->getFirstMedia('audio')->extension;
         return $format === self::PLAYBACK_FORMAT;
     }
 
@@ -34,8 +35,8 @@ class AudioProcessor
         $track->addMedia($original->getPath())
             ->preservingOriginal()
             ->withCustomProperties([
-                'format' => $original->extension,
-                'type' => 'playback'
+                'type' => 'playback',
+                'format' => $original->extension
             ])
             ->toMediaLibrary('audio', 'playback');
     }
@@ -51,9 +52,7 @@ class AudioProcessor
     {
         $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
 
-        $ffmpeg = FFMpeg::fromDisk($original->disk)
-
-            ->open($original->getPathRelativeToRoot());
+        $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
 
         $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot());
 
@@ -66,8 +65,8 @@ class AudioProcessor
 
         $track->addMediaFromDisk($outputFilename, $original->disk)
             ->withCustomProperties([
-                'format' => self::PLAYBACK_FORMAT,
-                'type' => 'playback'
+                'type' => 'playback',
+                'format' => self::PLAYBACK_FORMAT
             ])
             ->toMediaLibrary('audio', 'playback');
     }
@@ -79,7 +78,7 @@ class AudioProcessor
         return "{$dirname}/{$filename}." . self::PLAYBACK_FORMAT;
     }
 
-    private function isValidFormat(Track $track): bool
+    private function isSupportedFormat(Track $track): bool
     {
         $format = $track->getFirstMedia('audio')->extension;
         $supportedFormats = explode(',', config('audiowaveform.supported_formats'));

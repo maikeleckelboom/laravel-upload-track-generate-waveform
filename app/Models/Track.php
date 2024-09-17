@@ -23,6 +23,10 @@ class Track extends Model implements HasMedia
         'playback_stream_url'
     ];
 
+    protected $with = [
+
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -57,7 +61,9 @@ class Track extends Model implements HasMedia
 
     public function getWaveformDataUrlAttribute(): ?string
     {
-        return $this->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'binary')?->getUrl();
+        return $this->getMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'waveform' && $file->getCustomProperty('format') === 'json')
+            ->first()
+            ?->getUrl();
     }
 
     public function getWaveformImageUrlAttribute(): ?string

@@ -28,7 +28,7 @@ class TrackController extends Controller
     public function index(Request $request)
     {
         $tracks = $request->user()->tracks()->get();
-        return response()->json($tracks->load('media'));
+        return response()->json($tracks);
     }
 
     /**
@@ -78,7 +78,7 @@ class TrackController extends Controller
 
     public function show(Request $request, Track $track)
     {
-        return response()->json($track->load('media'));
+        return response()->json($track->without('media'));
     }
 
     public function update(Request $request, Track $track)
