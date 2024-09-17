@@ -75,7 +75,7 @@ class UploadService
     /**
      * @throws ChunksCannotBeAssembled
      */
-    private function assembleChunks(Upload $upload): string
+    private function assembleChunks(Upload $upload): void
     {
         $disk = Storage::disk($upload->disk);
         $chunks = $disk->files("chunks/{$upload->identifier}");
@@ -101,8 +101,6 @@ class UploadService
         if (config('app.env') === 'local' && count($disk->files("chunks")) === 0) {
             $disk->deleteDirectory("chunks");
         }
-
-        return $destinationPath;
     }
 
     private function hasReceivedAllChunks(Upload $upload): bool

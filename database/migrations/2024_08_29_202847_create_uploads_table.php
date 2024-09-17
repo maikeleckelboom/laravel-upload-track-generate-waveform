@@ -21,10 +21,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('size');
             $table->unsignedBigInteger('chunk_size');
             $table->unsignedBigInteger('received_chunks');
-            $table->string('path')->nullable();
             $table->string('disk')->default('original');
             $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
-
             $table->unsignedBigInteger('elapsed_time')->default(0);
             $table->float('transfer_speed')->default(0);
 

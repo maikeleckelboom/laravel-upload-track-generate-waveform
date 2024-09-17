@@ -35,18 +35,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         ]);
 
 
-
     // Initialize all files at once at the beginning of the upload,
     // this way when an unexpected close happens, the track will still be visible but appear 'detached' in UI.
     // The user can then re-attach the files to the models to continue the upload.
     // Later on, when the upload is completed, we can attach the files to the model.
     Route::post('/track/create', [TrackController::class, 'create'])->name('track.create');
-    Route::get('/track/{track}/waveform', [TrackController::class, 'waveformData'])->name('track.waveform');
-
-
-    Route::get('/waveform/{track}', [TrackController::class, 'waveformImage'])->name('waveform');
-
-
+    Route::get('/track/{track}/waveform-data', [TrackController::class, 'waveformData'])->name('track.waveform-data');
+    Route::get('/track/{track}/waveform-image', [TrackController::class, 'waveformImage'])->name('track.waveform-image');
 
 
     Route::get('/media', fn() => response()->json(auth()->user()->media()->get()))->name('media');

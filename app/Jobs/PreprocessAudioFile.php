@@ -7,7 +7,7 @@ use App\Services\AudioProcessor;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class ExtractAudioMetadata implements ShouldQueue
+class PreprocessAudioFile implements ShouldQueue
 {
     use Queueable;
 

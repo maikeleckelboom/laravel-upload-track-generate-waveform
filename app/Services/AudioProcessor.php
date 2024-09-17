@@ -31,7 +31,6 @@ class AudioProcessor
     {
         $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
 
-
         $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
 
         $outputFilename = $this->convertToFlacFormat($original->getPathRelativeToRoot());
@@ -41,10 +40,9 @@ class AudioProcessor
             ->inFormat(new Flac)
             ->save($outputFilename);
 
-
         $track->addMediaFromDisk($outputFilename, $original->disk)
-            ->withCustomProperties(['format' => 'flac', 'conversion' => true])
-            ->toMediaLibrary('audio', 'conversions');
+            ->withCustomProperties(['format' => 'flac'])
+            ->toMediaLibrary('audio', 'conversion');
     }
 
     private function convertToFlacFormat(string $path): string

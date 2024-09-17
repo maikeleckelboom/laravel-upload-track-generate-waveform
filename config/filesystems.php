@@ -32,40 +32,49 @@ return [
 
         'original' => [
             'driver' => 'local',
-            'root' => storage_path('app/original'),
-            'url' => env('APP_URL') . '/storage/original',
+            'root' => storage_path('app/private/original'),
+            'url' => env('APP_URL') . '/storage/private/original',
             'visibility' => 'private',
             'throw' => false,
         ],
 
-        'conversions' => [
+        'conversion' => [
             'driver' => 'local',
-            'root' => storage_path('app/conversions'),
-            'url' => env('APP_URL') . '/storage/conversions',
+            'root' => storage_path('app/private/conversion'),
+            'url' => env('APP_URL') . '/storage/private/conversion',
             'visibility' => 'private',
             'throw' => false,
         ],
+
+        'waveform' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/waveform'),
+            'url' => env('APP_URL') . '/storage/private/waveform',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'waveform_data' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/waveform_data'),
+            'url' => env('APP_URL') . '/storage/private/waveform_data',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'waveform_image' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/waveform_image'),
+            'url' => env('APP_URL') . '/storage/private/waveform_image',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
 
         'tracks' => [
             'driver' => 'local',
             'root' => storage_path('app/tracks'),
             'url' => env('APP_URL') . '/storage/tracks',
-            'visibility' => 'private',
-            'throw' => false,
-        ],
-
-        'waveforms' => [
-            'driver' => 'local',
-            'root' => storage_path('app/waveforms'),
-            'url' => env('APP_URL') . '/storage/waveforms',
-            'visibility' => 'private',
-            'throw' => false,
-        ],
-
-        'waveform_images' => [
-            'driver' => 'local',
-            'root' => storage_path('app/waveform_images'),
-            'url' => env('APP_URL') . '/storage/waveform_images',
             'visibility' => 'private',
             'throw' => false,
         ],

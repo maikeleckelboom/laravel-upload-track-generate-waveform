@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Str;
 
-class CreateAudioWaveform implements ShouldQueue
+class CreateAudioWaveformImage implements ShouldQueue
 {
     use Queueable;
 
@@ -21,16 +21,23 @@ class CreateAudioWaveform implements ShouldQueue
 
     public function handle(): void
     {
-        $flacConversion = $this->track
-            ->getMedia('audio', fn($file) => $file->getCustomProperty('format') === 'flac')
+        $binaryConversion = $this->track
+            ->getMedia('waveform', fn($file) => $file->getCustomProperty('format') === 'dat')
             ->first();
 
-        $inputFilename = $flacConversion->getPath();
-        $outputFilename = Str::replaceLast('flac', 'dat', $inputFilename);
+        $inputFilename = $binaryConversion->getPath();
+        $outputFilename = Str::replaceLast('dat', 'png', $inputFilename);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
+            ->setWaveformStyle('normal')
+            ->setWaveformColor('D2D1D9')
+            ->setWidth(1280)
+            ->setHeight(100)
+            ->setBarWidth(1)
+            ->setBarGap(0)
+            ->setBits(8)
             ->setEndTime($this->track->duration)
             ->generate();
 
@@ -38,8 +45,8 @@ class CreateAudioWaveform implements ShouldQueue
             $this->track
                 ->addMedia($outputFilename)
                 ->withCustomProperties([
-                    'format' => 'dat',
-                    'type' => 'binary'
+                    'format' => 'png',
+                    'type' => 'image'
                 ])
                 ->toMediaLibrary('waveform', 'waveform');
         }

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-class ShellCommandBuilder
+class CommandBuilder
 {
     protected string $command = '';
 
@@ -12,7 +12,7 @@ class ShellCommandBuilder
         return $this;
     }
 
-    public function addOption(string $option, $value): static
+    public function addOption(string $option, $value = ''): static
     {
         $this->command .= " $option $value";
         return $this;

@@ -9,7 +9,8 @@ use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
 use App\Jobs\CreateAudioWaveform;
-use App\Jobs\ExtractAudioMetadata;
+use App\Jobs\CreateAudioWaveformImage;
+use App\Jobs\PreprocessAudioFile;
 use App\Models\Track;
 use App\Services\UploadService;
 use Illuminate\Http\Request;
@@ -49,10 +50,12 @@ class TrackController extends Controller
                 ->withCustomProperties(['original' => true])
                 ->toMediaLibrary('audio');
 
-            ExtractAudioMetadata::dispatch($track);
+            PreprocessAudioFile::dispatch($track);
             CreateAudioWaveform::dispatch($track);
+            CreateAudioWaveformImage::dispatch($track);
 
-//            defer(fn() => $upload->delete());
+
+            defer(fn() => $upload->delete());
         }
 
         return response()->json(UploadResource::make($upload));
@@ -92,15 +95,20 @@ class TrackController extends Controller
 
     public function waveformData(Request $request, Track $track)
     {
-        $audio = $track->getFirstMedia('audio');
-        $waveform = $audio->getPath() . '.dat';
+        $waveform = $track
+            ->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('format') === 'dat')
+            ->getPath();
+
         return response()->file($waveform);
     }
 
-    public function waveformImage(Request $request, Track $track)
+    public function waveformImage(Request $request,  Track $track)
     {
-        $audio = $track->getFirstMedia('audio');
-        return $audio->getUrl() . '.dat.png';
+        $waveform = $track
+            ->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'image')
+            ->getPath();
+
+        return response()->file($waveform);
     }
 
 

@@ -2,15 +2,11 @@
 
 namespace App\Models;
 
-use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -21,7 +17,7 @@ class Track extends Model implements HasMedia
 
     protected $guarded = [];
 
-    protected $appends = ['stream_path', 'waveform_data_url', 'stream_url'];
+    protected $appends = ['waveform_image_url', 'waveform_data_url', 'stream_url'];
 
     public function user(): BelongsTo
     {
@@ -50,12 +46,18 @@ class Track extends Model implements HasMedia
 
     public function getStreamUrlAttribute(): string
     {
-        $frontendUrl = config('app.frontend_url');
-        return "{$frontendUrl}/track/{$this->id}/stream";
+        return $this->getMedia('audio', fn($file) => $file->getCustomProperty('format') === 'flac')
+            ->first()
+            ?->getUrl();
     }
 
-    public function getWaveformDataUrlAttribute(): string
+    public function getWaveformDataUrlAttribute(): string|null
     {
-        return $this->getFirstMedia('audio')->getUrl() . '.dat';
+        return $this->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'binary')?->getUrl();
+    }
+
+    public function getWaveformImageUrlAttribute(): string|null
+    {
+        return $this->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'image')?->getUrl();
     }
 }
