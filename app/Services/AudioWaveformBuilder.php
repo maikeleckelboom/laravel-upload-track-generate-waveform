@@ -7,11 +7,17 @@ use Illuminate\Support\Facades\Process;
 
 class AudioWaveformBuilder
 {
+    public function __construct(
+        private readonly ShellCommandBuilder $builder = new ShellCommandBuilder()
+    )
+    {
+    }
+
     protected string $inputFilename;
     protected string $outputFilename;
     protected int $bits = 8;
-    protected int $width = 3840;
-    protected int $height = 500;
+    protected int $width = 3840; // 3840;
+    protected int $height = 500; // 500;
     protected float $endTime = 0;
     protected string $backgroundColor = 'FFFFFF00';
     protected string $waveformColor = 'FFDE87FF';
@@ -94,8 +100,7 @@ class AudioWaveformBuilder
 
     public function generate(): bool
     {
-        $builder = new ShellCommandBuilder();
-        $shellCommand = $builder
+        $shellCommand = $this->builder
             ->setCommand("audiowaveform")
             ->addOption('--input-filename', $this->inputFilename)
             ->addOption('--output-filename', $this->outputFilename)
@@ -114,7 +119,11 @@ class AudioWaveformBuilder
         $processResult = Process::run($shellCommand);
 
         if ($processResult->failed()) {
-            Log::error('Failed to generate waveform image.');
+            Log::error(collect([
+                'input' => $this->inputFilename,
+                'output' => $this->outputFilename,
+                'error' => $processResult->errorOutput(),
+            ])->toJson(JSON_PRETTY_PRINT));
         }
 
         return $processResult->successful();

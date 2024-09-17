@@ -16,7 +16,7 @@ class Upload extends Model
         'chunk_size' => 'int',
         'received_chunks' => 'int',
         'elapsed_time' => 'int',
-        'upload_speed' => 'float'
+        'transfer_speed' => 'float'
     ];
 
     protected $appends = [
@@ -55,8 +55,8 @@ class Upload extends Model
 
     public function getRemainingTimeAttribute(): int
     {
-        if (intval($this->upload_speed) === 0) return 0;
-        return ($this->size - $this->received_bytes) / $this->upload_speed * 1000;
+        if (intval($this->transfer_speed) === 0) return 0;
+        return ($this->size - $this->received_bytes) / $this->transfer_speed * 1000;
     }
 
     public function getEtaAttribute(): int
@@ -78,7 +78,7 @@ class Upload extends Model
     {
         $this->update([
             'elapsed_time' => $data->elapsedTime,
-            'upload_speed' => $data->uploadSpeed
+            'transfer_speed' => $data->transferSpeed
         ]);
     }
 

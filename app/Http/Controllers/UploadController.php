@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Data\UploadData;
-use App\Exceptions\AssembleChunksFailed;
-use App\Exceptions\ChunkStorageFailed;
+use App\Exceptions\ChunksCannotBeAssembled;
+use App\Exceptions\ChunkCannotBeStored;
 use App\Http\Resources\UploadResource;
 use App\Models\Media;
 use App\Models\Upload;
@@ -32,8 +32,8 @@ class UploadController extends Controller
     /**
      * @throws FileIsTooBig
      * @throws FileDoesNotExist
-     * @throws ChunkStorageFailed
-     * @throws AssembleChunksFailed
+     * @throws ChunkCannotBeStored
+     * @throws ChunksCannotBeAssembled
      */
     public function store(Request $request)
     {
@@ -55,7 +55,7 @@ class UploadController extends Controller
         $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
 
         $validated = $request->validate([
-            'upload_speed' => 'numeric',
+            'transfer_speed' => 'numeric',
             'elapsed_time' => 'integer'
         ]);
 

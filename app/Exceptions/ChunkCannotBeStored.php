@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 
-class ChunkStorageFailed extends Exception
+class ChunkCannotBeStored extends Exception
 {
     public function __construct(
         $message =  'Unable to store chunk. Please try again',

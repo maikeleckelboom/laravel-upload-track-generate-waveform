@@ -15,11 +15,10 @@ return new class extends Migration {
         Schema::create('tracks', function (Blueprint $table) {
             $table->id();
 
-            $table->string('title');
-            $table->string('description')->nullable();
+            $table->string('name');
             $table->float('duration')->nullable();
 
-
+            $table->string('disk')->default('tracks');
             $table->foreignIdFor(Album::class)->nullable()->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->timestamps();

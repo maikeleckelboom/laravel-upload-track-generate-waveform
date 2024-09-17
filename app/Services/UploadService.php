@@ -2,21 +2,21 @@
 
 namespace App\Services;
 
-use App\Exceptions\AssembleChunksFailed;
-use App\Exceptions\ChunkStorageFailed;
-use App\Models\Upload;
-use App\Models\User;
 use App\Data\UploadData;
 use App\Enum\UploadStatus;
+use App\Exceptions\ChunkCannotBeStored;
+use App\Exceptions\ChunksCannotBeAssembled;
+use App\Models\Upload;
+use App\Models\User;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Exception;
 
 class UploadService
 {
     /**
-     * @throws ChunkStorageFailed
-     * @throws AssembleChunksFailed
+     * @throws ChunkCannotBeStored
+     * @throws ChunksCannotBeAssembled
      */
     public function store(User $user, UploadData $data): Upload
     {
@@ -42,18 +42,18 @@ class UploadService
             $upload->save();
         }
 
-        $upload->updateMetrics($data);
+        defer(fn() => $upload->updateMetrics($data));
 
         return $upload;
     }
 
     /**
-     * @throws ChunkStorageFailed
+     * @throws ChunkCannotBeStored
      */
     private function addChunk(Upload $upload, UploadedFile $uploadedFile): void
     {
         if (!$this->storeChunk($upload, $uploadedFile)) {
-            throw new ChunkStorageFailed();
+            throw new ChunkCannotBeStored();
         }
 
         if ($upload->received_chunks < $upload->total_chunks) {
@@ -72,7 +72,7 @@ class UploadService
     }
 
     /**
-     * @throws AssembleChunksFailed
+     * @throws ChunksCannotBeAssembled
      */
     private function assembleChunks(Upload $upload): string
     {
@@ -90,12 +90,16 @@ class UploadService
                 $disk->delete($chunk);
             }
         } catch (Exception $e) {
-            throw new AssembleChunksFailed($e->getMessage(), $e->getCode());
+            throw new ChunksCannotBeAssembled($e->getMessage(), $e->getCode());
         } finally {
             fclose($destinationStream);
         }
 
         $disk->deleteDirectory("chunks/{$upload->identifier}");
+
+        if (config('app.env') === 'local' && count($disk->files("chunks")) === 0) {
+            $disk->deleteDirectory("chunks");
+        }
 
         return $destinationPath;
     }

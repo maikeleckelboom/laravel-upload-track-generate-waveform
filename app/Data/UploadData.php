@@ -25,7 +25,7 @@ class UploadData extends Data
         public int          $chunkSize,
         #[File]
         public UploadedFile $chunkData,
-        public ?float       $uploadSpeed,
+        public ?float       $transferSpeed,
         public ?int         $elapsedTime
     )
     {
@@ -37,7 +37,7 @@ class UploadData extends Data
     private function extractMetrics(): array
     {
         return [
-            'uploadSpeed' => (float)request()->header('X-Upload-Speed', 0),
+            'transferSpeed' => (float)request()->header('X-Transfer-Speed', 0),
             'elapsedTime' => (int)request()->header('X-Elapsed-Time', 0)
         ];
     }

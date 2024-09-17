@@ -19,7 +19,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property string $name
  * @property int $elapsed_time
  * @property int $remaining_time
- * @property float $upload_speed
+ * @property float $transfer_speed
  * @property int $eta
  * @property string $updated_at
  * @property string $created_at
@@ -48,7 +48,7 @@ class UploadResource extends JsonResource
             ],
             'metrics' => [
                 'elapsed' => $this->elapsed_time,
-                'speed' => $this->upload_speed,
+                'speed' => $this->transfer_speed,
                 'remaining' => $this->remaining_time,
                 'eta' => $this->eta,
             ],

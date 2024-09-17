@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Data\UploadData;
-use App\Exceptions\AssembleChunksFailed;
 use App\Exceptions\AudioStreamNotFound;
+use App\Exceptions\ChunkCannotBeStored;
 use App\Exceptions\ChunkCountMismatch;
-use App\Exceptions\ChunkStorageFailed;
+use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
 use App\Jobs\CreateAudioWaveform;
+use App\Jobs\ExtractAudioMetadata;
 use App\Models\Track;
-use App\Services\AudioProcessor;
 use App\Services\UploadService;
-use App\Services\WaveformGenerator;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -20,8 +19,7 @@ use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 class TrackController extends Controller
 {
     public function __construct(
-        private readonly UploadService     $uploadService,
-        private readonly AudioProcessor    $audioProcessor,
+        private readonly UploadService $uploadService
     )
     {
     }
@@ -29,15 +27,12 @@ class TrackController extends Controller
     public function index(Request $request)
     {
         $tracks = $request->user()->tracks()->get();
-        return response()->json($tracks);
+        return response()->json($tracks->load('media'));
     }
 
     /**
-     * @throws FileCannotBeAdded
-     * @throws FileIsTooBig
-     * @throws ChunkCountMismatch
-     * @throws ChunkStorageFailed
-     * @throws AssembleChunksFailed
+     * @throws FileCannotBeAdded|FileIsTooBig
+     * @throws ChunkCannotBeStored|ChunkCountMismatch|ChunksCannotBeAssembled
      * @throws AudioStreamNotFound
      */
     public function store(Request $request)
@@ -48,27 +43,35 @@ class TrackController extends Controller
 
         if ($upload->isCompleted()) {
 
-            $track = $user->tracks()->create(['title' => $upload->name]);
-
+            $track = $user->tracks()->create(['name' => $upload->name]);
             $track->addMediaFromDisk($upload->file_name, $upload->disk)->toMediaLibrary('audio');
-            $track->duration = $this->audioProcessor->getDurationInSeconds($track);
-            $track->save();
 
+
+            ExtractAudioMetadata::dispatch($track);
             CreateAudioWaveform::dispatch($track);
         }
 
         return response()->json(UploadResource::make($upload));
     }
 
+    public function stream(Request $request, Track $track)
+    {
+        $audio = $track->getFirstMedia('audio');
+        return response()->stream(fn() => $audio->stream(), 200, [
+            'Content-Type' => $audio->mime_type,
+            'Content-Length' => $audio->size,
+        ]);
+    }
+
+    public function create(Request $request)
+    {
+        $tracks = $request->user()->tracks()->createMany($request->only(['name']));
+        return response()->json($tracks);
+    }
+
     public function show(Request $request, Track $track)
     {
-        $waveform = $track->getFirstMedia('audio')->getPath() . '.dat';
-
-        return response()->json([
-            'track' => $track,
-            'waveform' => $waveform,
-            'image' => $track->getFirstMedia('audio')->getUrl() . '.png',
-        ]);
+        return response()->json($track->load('media'));
     }
 
     public function update(Request $request, Track $track)
@@ -83,10 +86,18 @@ class TrackController extends Controller
         return response()->json(['message' => 'Track deleted']);
     }
 
-    public function waveform(Request $request, Track $track)
+    public function waveformData(Request $request, Track $track)
     {
         $audio = $track->getFirstMedia('audio');
         $waveform = $audio->getPath() . '.dat';
         return response()->file($waveform);
     }
+
+    public function waveformImage(Request $request, Track $track)
+    {
+        $audio = $track->getFirstMedia('audio');
+        return $audio->getUrl() . '.dat.png';
+    }
+
+
 }

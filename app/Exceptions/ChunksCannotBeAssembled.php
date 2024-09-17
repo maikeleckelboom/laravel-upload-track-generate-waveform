@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 
-class AssembleChunksFailed extends Exception
+class ChunksCannotBeAssembled extends Exception
 {
     public function __construct(
         $message = 'The chunks could not be assembled',

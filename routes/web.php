@@ -1,12 +1,13 @@
 <?php
 
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => [
-    'time' => now()->toDateTimeString(),
+    'now()' => now()->toDateTimeString(),
 ]);
 
 require __DIR__ . '/auth.php';
@@ -33,22 +34,28 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
             'update' => 'tracks.update',
         ]);
 
-    // storage
-    Route::get('/storage/{path}', function () {
-
-        $path = request()->path;
-        $path = storage_path("app/{$path}");
-        if (!file_exists($path)) {
-            return response()->json(['error' => 'File not found'], 404);
-        }
-        return response()->file($path);
-
-    })->name('storage');
 
 
-    Route::get('/track/{track}/waveform', [TrackController::class, 'waveform'])->name('track.waveform');
+    // Initialize all files at once at the beginning of the upload,
+    // this way when an unexpected close happens, the track will still be visible but appear 'detached' in UI.
+    // The user can then re-attach the files to the models to continue the upload.
+    // Later on, when the upload is completed, we can attach the files to the model.
+    Route::post('/track/create', [TrackController::class, 'create'])->name('track.create');
+    Route::get('/track/{track}/waveform', [TrackController::class, 'waveformData'])->name('track.waveform');
 
-    Route::post('/track', [TrackController::class, 'store'])->name('track.store');
+
+    Route::get('/waveform/{track}', [TrackController::class, 'waveformImage'])->name('waveform');
+
+
+
 
     Route::get('/media', fn() => response()->json(auth()->user()->media()->get()))->name('media');
 });
+
+
+Route::get('/storage/{disk}/{path}', StorageController::class)
+    ->where('path', '.*')
+    ->name('storage');
+
+Route::get('/track/{track}/stream', [TrackController::class, 'stream'])->name('track.stream');
+

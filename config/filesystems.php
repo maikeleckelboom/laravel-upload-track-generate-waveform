@@ -30,10 +30,42 @@ return [
 
     'disks' => [
 
-        'uploads' => [
+        'original' => [
             'driver' => 'local',
-            'root' => storage_path('app/original_files'),
-            'url' => env('APP_URL').'/storage/original_files',
+            'root' => storage_path('app/original'),
+            'url' => env('APP_URL') . '/storage/original',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'converted' => [
+            'driver' => 'local',
+            'root' => storage_path('app/converted'),
+            'url' => env('APP_URL') . '/storage/converted',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'tracks' => [
+            'driver' => 'local',
+            'root' => storage_path('app/tracks'),
+            'url' => env('APP_URL') . '/storage/tracks',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'waveform_data' => [
+            'driver' => 'local',
+            'root' => storage_path('app/waveform_data'),
+            'url' => env('APP_URL') . '/storage/waveform_data',
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'waveform_images' => [
+            'driver' => 'local',
+            'root' => storage_path('app/waveform_images'),
+            'url' => env('APP_URL') . '/storage/waveform_images',
             'visibility' => 'private',
             'throw' => false,
         ],
@@ -41,7 +73,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'private',
             'throw' => false,
         ],
@@ -49,7 +81,7 @@ return [
         'local-temporary' => [
             'driver' => 'local',
             'root' => storage_path('app/temporary'),
-            'url' => env('APP_URL').'/storage/temporary',
+            'url' => env('APP_URL') . '/storage/temporary',
             'visibility' => 'private',
             'throw' => false,
         ],
@@ -57,7 +89,7 @@ return [
         'local-test-cases' => [
             'driver' => 'local',
             'root' => storage_path('test_cases/app'),
-            'url' => env('APP_URL').'/storage/test_cases/app',
+            'url' => env('APP_URL') . '/storage/test_cases/app',
             'visibility' => 'private',
             'throw' => false,
         ],
@@ -65,7 +97,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
         ],

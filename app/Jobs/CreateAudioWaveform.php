@@ -11,15 +11,16 @@ class CreateAudioWaveform implements ShouldQueue
 {
     use Queueable;
 
+    private AudioWaveformBuilder $builder;
+
     /**
      * Create a new job instance.
      */
     public function __construct(
-        private readonly Track                $track,
-        private readonly AudioWaveformBuilder $builder = new AudioWaveformBuilder()
+        private readonly Track $track
     )
     {
-
+        $this->builder = new AudioWaveformBuilder();
     }
 
     /**
@@ -29,25 +30,31 @@ class CreateAudioWaveform implements ShouldQueue
     {
         $inputFilename = $this->track->getFirstMedia('audio')->getPath();
 
-        $successful = $this->builder
+        $this->builder
             ->setInputFilename($inputFilename)
-            ->setOutputFilename($outputFilename = $inputFilename . '.dat')
-            ->setEndTime($endTime = $this->track->duration)
+            ->setOutputFilename($inputFilename . '.dat')
+            ->setEndTime($this->track->duration)
+            ->setBits(8)
             ->generate();
-
-        if ($successful) {
-            $this->createWaveformImage($outputFilename, $endTime);
-        }
     }
-
+    /**
+     * Create a waveform image from the generated data file.
+     */
     private function createWaveformImage(string $inputFilename, float $endTime): bool
     {
         return $this->builder
             ->setInputFilename($inputFilename)
             ->setOutputFilename($inputFilename . '.png')
             ->setEndTime($endTime)
-            ->setWaveformColor('FFDE87FF')
+            ->setWidth(3840)
+            ->setHeight(500)
+            ->setBits(8)
             ->setBackgroundColor('FFFFFF00')
+            ->setWaveformColor('FFDE87FF')
+            ->setWaveformStyle('bars')
+            ->setBarWidth(2)
+            ->setBarGap(1)
+            ->setAmplitudeScale(0.975)
             ->generate();
     }
 }

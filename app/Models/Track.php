@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,8 @@ class Track extends Model implements HasMedia
     use InteractsWithMedia;
 
     protected $guarded = [];
+
+    protected $appends = ['stream_path', 'waveform_data_url', 'stream_url'];
 
     public function user(): BelongsTo
     {
@@ -40,13 +43,19 @@ class Track extends Model implements HasMedia
         return $this->belongsToMany(Playlist::class);
     }
 
-    public function audioMetadata(): HasOne
+    public function getStreamPathAttribute(): string
     {
-        return $this->hasOne(AudioMetadata::class);
+        return "track/{$this->id}/stream";
     }
 
-    public function getStorageInstance(): FilesystemAdapter|Filesystem
+    public function getStreamUrlAttribute(): string
     {
-        return $this->getMediaDisk();
+        $frontendUrl = config('app.frontend_url');
+        return "{$frontendUrl}/track/{$this->id}/stream";
+    }
+
+    public function getWaveformDataUrlAttribute(): string
+    {
+        return $this->getFirstMedia('audio')->getUrl() . '.dat';
     }
 }
