@@ -27,10 +27,9 @@ class ExtractAudioMetadata implements ShouldQueue
     public function handle(): void
     {
 
-        $this->audioProcessor->convertAudioFormat($this->track);
-
         $this->track->duration = $this->audioProcessor->getDurationInSeconds($this->track);
         $this->track->save();
 
+        $this->audioProcessor->convertAudioFormat($this->track);
     }
 }

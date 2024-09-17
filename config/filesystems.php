@@ -38,10 +38,10 @@ return [
             'throw' => false,
         ],
 
-        'converted' => [
+        'conversions' => [
             'driver' => 'local',
-            'root' => storage_path('app/converted'),
-            'url' => env('APP_URL') . '/storage/converted',
+            'root' => storage_path('app/conversions'),
+            'url' => env('APP_URL') . '/storage/conversions',
             'visibility' => 'private',
             'throw' => false,
         ],
@@ -54,10 +54,10 @@ return [
             'throw' => false,
         ],
 
-        'waveform_data' => [
+        'waveforms' => [
             'driver' => 'local',
-            'root' => storage_path('app/waveform_data'),
-            'url' => env('APP_URL') . '/storage/waveform_data',
+            'root' => storage_path('app/waveforms'),
+            'url' => env('APP_URL') . '/storage/waveforms',
             'visibility' => 'private',
             'throw' => false,
         ],

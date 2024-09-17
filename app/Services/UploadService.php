@@ -11,6 +11,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UploadService
 {
@@ -21,8 +22,8 @@ class UploadService
     public function store(User $user, UploadData $data): Upload
     {
         $upload = $user->uploads()->firstOrCreate(['identifier' => $data->identifier], [
-            'file_name' => $data->name,
-            'name' => pathinfo($data->name, PATHINFO_FILENAME),
+            'file_name' => $safeName = Str::trim(pathinfo($data->name, PATHINFO_FILENAME) . '.' . pathinfo($data->name, PATHINFO_EXTENSION)),
+            'name' => pathinfo($safeName, PATHINFO_FILENAME),
             'mime_type' => $data->type,
             'size' => $data->size,
             'chunk_size' => $data->chunkSize,
@@ -37,7 +38,7 @@ class UploadService
         $this->addChunk($upload, $data->chunkData);
 
         if ($this->hasReceivedAllChunks($upload)) {
-            $upload->path = $this->assembleChunks($upload);
+            $this->assembleChunks($upload);
             $upload->status = UploadStatus::COMPLETED;
             $upload->save();
         }

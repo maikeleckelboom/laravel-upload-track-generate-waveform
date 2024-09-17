@@ -29,24 +29,22 @@ class AudioProcessor
 
     public function convertAudioFormat(Track $track): void
     {
-        $audio = $track->getFirstMedia('audio');
+        $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
 
-        $pathRelativeToRoot = $audio->getPathRelativeToRoot();
 
-        $ffmpeg = FFMpeg::fromDisk($audio->disk)
-            ->open($pathRelativeToRoot);
+        $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
+
+        $outputFilename = $this->convertToFlacFormat($original->getPathRelativeToRoot());
 
         $ffmpeg->export()
-            ->toDisk($audio->disk)
+            ->toDisk($original->disk)
             ->inFormat(new Flac)
-            ->save($this->convertToFlacFormat($pathRelativeToRoot));
+            ->save($outputFilename);
 
 
-        $track->media()->where('id', $audio->id)->update([
-            'file_name' => pathinfo($pathRelativeToRoot, PATHINFO_FILENAME) . '.flac'
-        ]);
-
-        Storage::disk($audio->disk)->delete($pathRelativeToRoot);
+        $track->addMediaFromDisk($outputFilename, $original->disk)
+            ->withCustomProperties(['format' => 'flac', 'conversion' => true])
+            ->toMediaLibrary('audio', 'conversions');
     }
 
     private function convertToFlacFormat(string $path): string

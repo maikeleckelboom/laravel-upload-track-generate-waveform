@@ -6,6 +6,7 @@ use App\Models\Track;
 use App\Services\AudioWaveformBuilder;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Str;
 
 class CreateAudioWaveform implements ShouldQueue
 {
@@ -28,15 +29,29 @@ class CreateAudioWaveform implements ShouldQueue
      */
     public function handle(): void
     {
-        $inputFilename = $this->track->getFirstMedia('audio')->getPath();
 
-        $this->builder
-            ->setInputFilename($inputFilename)
-            ->setOutputFilename($inputFilename . '.dat')
+        $flacConversion = $this->track
+            ->getMedia('audio', fn($file) => $file->getCustomProperty('format') === 'flac')
+            ->first();
+
+        $inputFilename = $flacConversion->getPath();
+        $outputFilename = Str::replaceLast('flac', 'dat', $inputFilename);
+
+        $successful = $this->builder
+            ->setInputFilename(escapeshellarg($inputFilename))
+            ->setOutputFilename(escapeshellarg($outputFilename))
             ->setEndTime($this->track->duration)
-            ->setBits(8)
             ->generate();
+
+        if ($successful) {
+            $this->track->addMedia($outputFilename)
+                ->withCustomProperties(['source_format' => 'flac'])
+                ->toMediaLibrary('waveforms', 'waveforms');
+        } else {
+            logger()->error('Failed to generate waveform.', ['track_id' => $this->track->id]);
+        }
     }
+
     /**
      * Create a waveform image from the generated data file.
      */

@@ -120,9 +120,9 @@ class AudioWaveformBuilder
 
         if ($processResult->failed()) {
             Log::error(collect([
-                'input' => $this->inputFilename,
-                'output' => $this->outputFilename,
-                'error' => $processResult->errorOutput(),
+                'inputFilename' => $this->inputFilename,
+                'outputFilename' => $this->outputFilename,
+                'errorOutput' => $processResult->errorOutput(),
             ])->toJson(JSON_PRETTY_PRINT));
         }
 

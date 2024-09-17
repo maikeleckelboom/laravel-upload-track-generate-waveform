@@ -44,11 +44,15 @@ class TrackController extends Controller
         if ($upload->isCompleted()) {
 
             $track = $user->tracks()->create(['name' => $upload->name]);
-            $track->addMediaFromDisk($upload->file_name, $upload->disk)->toMediaLibrary('audio');
 
+            $track->addMediaFromDisk($upload->file_name, $upload->disk)
+                ->withCustomProperties(['original' => true])
+                ->toMediaLibrary('audio');
 
             ExtractAudioMetadata::dispatch($track);
             CreateAudioWaveform::dispatch($track);
+
+//            defer(fn() => $upload->delete());
         }
 
         return response()->json(UploadResource::make($upload));
