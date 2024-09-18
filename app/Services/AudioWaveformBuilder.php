@@ -18,9 +18,8 @@ class AudioWaveformBuilder
     protected string $inputFilename;
     protected string $outputFilename;
     protected int $bits = 8;
-    protected int $width = 1090; // 3840; // 3840; // 1280; // 3840;
-    protected int $height = 200;
-    // 500;// 500; // 120; // 500;
+    protected int $width = 1280;
+    protected int $height = 220;
     protected float $endTime = 0;
     protected string $backgroundColor = 'FFFFFF00';
     protected string $waveformColor = 'FFDE87FF';

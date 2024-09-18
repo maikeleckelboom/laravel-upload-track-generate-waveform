@@ -22,8 +22,7 @@ class CreateAudioWaveformData implements ShouldQueue
     public function handle(): void
     {
         $playbackAudio = $this->track
-            ->getMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback')
-            ->first();
+            ->getFirstMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback');
 
         $outputFilename = Str::replaceLast(
             $playbackAudio->getCustomProperty('format'),
@@ -37,16 +36,13 @@ class CreateAudioWaveformData implements ShouldQueue
             ->setEndTime($this->track->duration)
             ->setWidth( 1280)
             ->setHeight(120)
-            ->setBits(8)
+            ->setBits(self::bitsByDuration($this->track->duration))
             ->generate();
 
         if ($processResult->successful()) {
             $this->track
                 ->addMedia($outputFilename)
-                ->withCustomProperties([
-                    'format' => 'dat',
-                    'type' => 'waveform'
-                ])
+                ->withCustomProperties(['format' => 'dat'])
                 ->toMediaLibrary('waveform', 'waveform');
         }
     }

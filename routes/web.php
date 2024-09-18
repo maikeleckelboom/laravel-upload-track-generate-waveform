@@ -53,5 +53,5 @@ Route::get('/storage/{disk}/{path}', StorageController::class)
     ->where('path', '.*')
     ->name('storage');
 
-Route::get('/track/{track}/stream', [TrackController::class, 'stream'])->name('track.stream');
+Route::get('/track/{track}/stream', [TrackController::class, 'playback'])->name('track.stream');
 

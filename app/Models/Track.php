@@ -18,9 +18,9 @@ class Track extends Model implements HasMedia
     protected $guarded = [];
 
     protected $appends = [
+        'playback_url',
         'waveform_image_url',
         'waveform_data_url',
-        'playback_url',
         'is_waveform_ready'
     ];
 
@@ -44,33 +44,28 @@ class Track extends Model implements HasMedia
         return $this->belongsToMany(Playlist::class);
     }
 
-    public function getPlaybackStreamPathAttribute(): string
-    {
-        return "track/{$this->id}/stream";
-    }
 
     public function getPlaybackUrlAttribute(): ?string
     {
-        return $this->getMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback')
-            ->first()
-            ?->getUrl();
+        $isTypePlayback = fn($file) => $file->getCustomProperty('type') === 'playback';
+        return $this->getFirstMedia('audio', $isTypePlayback)?->getUrl();
     }
 
     public function getWaveformDataUrlAttribute(): ?string
     {
-        return $this->getMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'waveform' && $file->getCustomProperty('format') === 'dat')
-            ->first()
-            ?->getUrl();
+        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === 'dat';
+        return $this->getFirstMedia('waveform', $inBinaryFormat)?->getUrl();
     }
 
     public function getWaveformImageUrlAttribute(): ?string
     {
-        return $this->getFirstMedia('waveform', fn($file) => $file->getCustomProperty('type') === 'image')?->getUrl();
+        $isTypeImage = fn($file) => $file->getCustomProperty('type') === 'image';
+        return $this->getFirstMedia('waveform', $isTypeImage)?->getUrl();
     }
 
     public function getIsWaveformReadyAttribute(): bool
     {
-        $callback = fn($file) => $file->getCustomProperty('type') === 'waveform' && $file->getCustomProperty('format') === 'dat';
+        $callback = fn($file) => $file->getCustomProperty('format') === 'dat';
         return $this->getMedia('waveform', $callback)->isNotEmpty();
     }
 

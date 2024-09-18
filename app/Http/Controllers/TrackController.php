@@ -74,7 +74,7 @@ class TrackController extends Controller
         ]);
     }
 
-    public function stream(Request $request, Track $track)
+    public function playback(Request $request, Track $track)
     {
         $audio = $track->getFirstMedia('audio');
         return response()->stream(fn() => $audio->stream(), 200, [
