@@ -21,7 +21,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         ->names([
             'index' => 'upload.index',
             'store' => 'upload.store',
-            'update' => 'upload.update',
             'destroy' => 'upload.destroy',
         ]);
 
@@ -33,6 +32,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
             'show' => 'tracks.show',
             'update' => 'tracks.update',
         ]);
+
+    Route::get('/track/{track}/waveform', [TrackController::class, 'waveformData'])->name('track.waveform-data');
 
 
     // Initialize all files at once at the beginning of the upload,

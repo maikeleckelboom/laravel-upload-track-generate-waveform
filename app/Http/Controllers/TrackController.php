@@ -27,7 +27,11 @@ class TrackController extends Controller
 
     public function index(Request $request)
     {
-        $tracks = $request->user()->tracks()->get();
+        $tracks = $request->user()->tracks()
+            ->get()
+            ->sortByDesc('created_at')
+            ->values();
+
         return response()->json($tracks);
     }
 
@@ -52,13 +56,22 @@ class TrackController extends Controller
 
             PreprocessAudioFile::dispatch($track);
             CreateAudioWaveformData::dispatch($track);
-            CreateAudioWaveformImage::dispatch($track);
-
 
             defer(fn() => $upload->delete());
         }
 
         return response()->json(UploadResource::make($upload));
+    }
+
+    public function waveformData(Request $request, Track $track)
+    {
+        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === 'dat';
+        $waveform = $track->getFirstMedia('waveform', $inBinaryFormat);
+
+        return response()->stream(fn() => $waveform->stream(), 200, [
+            'Content-Type' => $waveform->mime_type,
+            'Content-Length' => $waveform->size,
+        ]);
     }
 
     public function stream(Request $request, Track $track)
@@ -78,18 +91,20 @@ class TrackController extends Controller
 
     public function show(Request $request, Track $track)
     {
-        return response()->json($track->without('media'));
+        return response()->json($track);
     }
 
     public function update(Request $request, Track $track)
     {
         $track->update($request->only(['title', 'description']));
+
         return response()->json($track);
     }
 
     public function destroy(Request $request, Track $track)
     {
         $track->delete();
+
         return response()->noContent();
     }
 }

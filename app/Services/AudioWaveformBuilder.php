@@ -18,15 +18,17 @@ class AudioWaveformBuilder
     protected string $inputFilename;
     protected string $outputFilename;
     protected int $bits = 8;
-    protected int $width = 3840; // 3840; // 1280; // 3840;
-    protected int $height = 500;// 500; // 120; // 500;
+    protected int $width = 1090; // 3840; // 3840; // 1280; // 3840;
+    protected int $height = 200;
+    // 500;// 500; // 120; // 500;
     protected float $endTime = 0;
     protected string $backgroundColor = 'FFFFFF00';
     protected string $waveformColor = 'FFDE87FF';
     protected string $waveformStyle = 'bars'; // 'normal';
     protected int $barWidth = 2;
     protected int $barGap = 1;
-    protected float $amplitudeScale = 0.975;
+    protected float $amplitudeScale = 0.995;
+    protected string $borderColor = '';
 
     public function setInputFilename(string $inputFilename): static
     {
@@ -73,6 +75,12 @@ class AudioWaveformBuilder
     public function setWaveformColor(string $waveformColor): static
     {
         $this->waveformColor = $this->validateAndNormalizeColor($waveformColor);
+        return $this;
+    }
+
+    public function setBorderColor(string $borderColor): static
+    {
+        $this->borderColor = $this->validateAndNormalizeColor($borderColor);
         return $this;
     }
 
@@ -128,15 +136,16 @@ class AudioWaveformBuilder
             ->addOption('--height', $this->height)
             ->addOption('--end', $this->endTime)
             ->addOption('--no-axis')
+            ->addOption($this->borderColor ? $this->builder->addOption('--border-color', $this->borderColor) : '')
             ->getCommand();
 
         $processResult = Process::run($shellCommand);
 
         if ($processResult->failed()) {
             Log::error("Failed to generate waveform", [
-                'input' => $this->inputFilename,
-                'output' => $this->outputFilename,
-                'error' => json_encode($processResult->errorOutput(), JSON_PRETTY_PRINT)
+                'inputFilename' => $this->inputFilename,
+                'outputFilename' => $this->outputFilename,
+                'error' => $processResult->errorOutput()
             ]);
         }
 

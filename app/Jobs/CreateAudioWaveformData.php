@@ -25,11 +25,9 @@ class CreateAudioWaveformData implements ShouldQueue
             ->getMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback')
             ->first();
 
-        logger()->info("Playback audio path: {$playbackAudio->getPath()}");
-
         $outputFilename = Str::replaceLast(
             $playbackAudio->getCustomProperty('format'),
-            'json',
+            'dat',
             $playbackAudio->getPath()
         );
 
@@ -37,16 +35,24 @@ class CreateAudioWaveformData implements ShouldQueue
             ->setInputFilename(escapeshellarg($playbackAudio->getPath()))
             ->setOutputFilename(escapeshellarg($outputFilename))
             ->setEndTime($this->track->duration)
+            ->setWidth( 1280)
+            ->setHeight(120)
+            ->setBits(8)
             ->generate();
 
         if ($processResult->successful()) {
             $this->track
                 ->addMedia($outputFilename)
                 ->withCustomProperties([
-                    'format' => 'json',
+                    'format' => 'dat',
                     'type' => 'waveform'
                 ])
                 ->toMediaLibrary('waveform', 'waveform');
         }
+    }
+
+    public static function bitsByDuration(float $duration): int
+    {
+        return $duration < 60 ? 16 : 8;
     }
 }
