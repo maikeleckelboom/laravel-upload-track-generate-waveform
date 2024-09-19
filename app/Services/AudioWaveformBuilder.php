@@ -125,6 +125,7 @@ class AudioWaveformBuilder
             ->addOption('--input-filename', $this->inputFilename)
             ->addOption('--output-filename', $this->outputFilename)
             ->addOption('--bits', $this->bits)
+//            ->addOption('--zoom', 256)
             ->addOption('--end', $this->endTime)
             ->addOption('--amplitude-scale', $this->amplitudeScale)
             ->addOption('--background-color', $this->backgroundColor)
