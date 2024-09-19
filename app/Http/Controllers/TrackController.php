@@ -63,9 +63,11 @@ class TrackController extends Controller
         return response()->json(UploadResource::make($upload));
     }
 
-    public function waveformData(Request $request, Track $track)
+    public function waveform(Request $request, Track $track)
     {
-        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === 'dat';
+        $format = $request->query('format', 'dat');
+
+        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === $format;
         $waveform = $track->getFirstMedia('waveform', $inBinaryFormat);
 
         return response()->stream(fn() => $waveform->stream(), 200, [
@@ -103,8 +105,12 @@ class TrackController extends Controller
 
     public function destroy(Request $request, Track $track)
     {
-        $track->delete();
+        try {
+            $track->delete();
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
 
-        return response()->noContent();
+        return response()->json(['message' => 'Track deleted']);
     }
 }

@@ -12,28 +12,25 @@ Route::get('/', fn() => [
 
 require __DIR__ . '/auth.php';
 
+Route::get('/storage/{disk}/{path}', StorageController::class)
+    ->where('path', '.*')
+    ->name('storage');
+
+// Route::get('/track/{track}/playback', [TrackController::class, 'playback']);
+
 Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::get('/user', UserController::class)->name('user');
 
     Route::resource('upload', UploadController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->names([
-            'index' => 'upload.index',
-            'store' => 'upload.store',
-            'destroy' => 'upload.destroy',
-        ]);
+        ->only(['index', 'store', 'update', 'destroy']);
 
     Route::resource('track', TrackController::class)
-        ->only(['index', 'store', 'show', 'update'])
-        ->names([
-            'index' => 'tracks.index',
-            'store' => 'tracks.store',
-            'show' => 'tracks.show',
-            'update' => 'tracks.update',
-        ]);
+        ->only(['index', 'store', 'show', 'update', 'destroy']);
 
-    Route::get('/track/{track}/waveform', [TrackController::class, 'waveformData'])->name('track.waveform-data');
+    Route::get('/track/{track}/waveform', [TrackController::class, 'waveform']);
+
+
 
 
     // Initialize all files at once at the beginning of the upload,
@@ -41,17 +38,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     // The user can then re-attach the files to the models to continue the upload.
     // Later on, when the upload is completed, we can attach the files to the model.
 //    Route::post('/track/create', [TrackController::class, 'create'])->name('track.create');
-//    Route::get('/track/{track}/waveform-data', [TrackController::class, 'waveformData'])->name('track.waveform-data');
-//    Route::get('/track/{track}/waveform-image', [TrackController::class, 'waveformImage'])->name('track.waveform-image');
 
 
     Route::get('/media', fn() => response()->json(auth()->user()->media()->get()))->name('media');
 });
-
-
-Route::get('/storage/{disk}/{path}', StorageController::class)
-    ->where('path', '.*')
-    ->name('storage');
-
-Route::get('/track/{track}/stream', [TrackController::class, 'playback'])->name('track.stream');
 

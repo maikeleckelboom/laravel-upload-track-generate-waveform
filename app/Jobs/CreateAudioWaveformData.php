@@ -36,7 +36,7 @@ class CreateAudioWaveformData implements ShouldQueue
             ->setEndTime($this->track->duration)
             ->setWidth( 1280)
             ->setHeight(120)
-            ->setBits(self::bitsByDuration($this->track->duration))
+            ->setBits(8)
             ->generate();
 
         if ($processResult->successful()) {
@@ -47,8 +47,8 @@ class CreateAudioWaveformData implements ShouldQueue
         }
     }
 
-    public static function bitsByDuration(float $duration): int
+    private function bitsByDuration(): int
     {
-        return $duration < 60 ? 16 : 8;
+        return $this->track->duration < 60 ? 16 : 8;
     }
 }

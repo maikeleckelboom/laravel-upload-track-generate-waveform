@@ -25,16 +25,15 @@ class AudioProcessor
 
     private function isValidAsPlayback(Track $track): bool
     {
-        $format = $track->getFirstMedia('audio')->extension;
-        return $format === self::PLAYBACK_FORMAT;
+        return $track->getFirstMedia('audio')->extension === self::PLAYBACK_FORMAT;
     }
 
     private function addOriginalFileAsPlayback(Track $track): void
     {
         $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
         $track->addMedia($original->getPath())
-            ->preservingOriginal()
             ->withCustomProperties([
+                'original' => true,
                 'type' => 'playback',
                 'format' => $original->extension
             ])

@@ -19,9 +19,9 @@ class Track extends Model implements HasMedia
 
     protected $appends = [
         'playback_url',
-        'waveform_image_url',
         'waveform_data_url',
-        'is_waveform_ready'
+        'is_waveform_ready',
+        'is_playback_ready',
     ];
 
     public function user(): BelongsTo
@@ -44,7 +44,6 @@ class Track extends Model implements HasMedia
         return $this->belongsToMany(Playlist::class);
     }
 
-
     public function getPlaybackUrlAttribute(): ?string
     {
         $isTypePlayback = fn($file) => $file->getCustomProperty('type') === 'playback';
@@ -57,16 +56,13 @@ class Track extends Model implements HasMedia
         return $this->getFirstMedia('waveform', $inBinaryFormat)?->getUrl();
     }
 
-    public function getWaveformImageUrlAttribute(): ?string
-    {
-        $isTypeImage = fn($file) => $file->getCustomProperty('type') === 'image';
-        return $this->getFirstMedia('waveform', $isTypeImage)?->getUrl();
-    }
-
     public function getIsWaveformReadyAttribute(): bool
     {
-        $callback = fn($file) => $file->getCustomProperty('format') === 'dat';
-        return $this->getMedia('waveform', $callback)->isNotEmpty();
+        return !is_null($this->waveform_data_url);
     }
 
+    public function getIsPlaybackReadyAttribute(): bool
+    {
+        return !is_null($this->playback_url);
+    }
 }

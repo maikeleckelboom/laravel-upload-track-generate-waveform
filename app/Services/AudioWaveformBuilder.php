@@ -19,14 +19,14 @@ class AudioWaveformBuilder
     protected string $outputFilename;
     protected int $bits = 8;
     protected int $width = 1280;
-    protected int $height = 220;
+    protected int $height = 120;
     protected float $endTime = 0;
     protected string $backgroundColor = 'FFFFFF00';
     protected string $waveformColor = 'FFDE87FF';
-    protected string $waveformStyle = 'bars'; // 'normal';
-    protected int $barWidth = 2;
-    protected int $barGap = 1;
-    protected float $amplitudeScale = 0.995;
+    protected string $waveformStyle = 'normal'; // 'normal' or 'bars'
+    protected int $barWidth = 1;
+    protected int $barGap = 0;
+    protected float $amplitudeScale = 0.9;
     protected string $borderColor = '';
 
     public function setInputFilename(string $inputFilename): static
@@ -124,16 +124,16 @@ class AudioWaveformBuilder
             ->setCommand("audiowaveform")
             ->addOption('--input-filename', $this->inputFilename)
             ->addOption('--output-filename', $this->outputFilename)
+            ->addOption('--bits', $this->bits)
+            ->addOption('--end', $this->endTime)
             ->addOption('--amplitude-scale', $this->amplitudeScale)
             ->addOption('--background-color', $this->backgroundColor)
             ->addOption('--waveform-color', $this->waveformColor)
             ->addOption('--waveform-style', $this->waveformStyle)
             ->addOption('--bar-width', $this->barWidth)
             ->addOption('--bar-gap', $this->barGap)
-            ->addOption('--bits', $this->bits)
             ->addOption('--width', $this->width)
             ->addOption('--height', $this->height)
-            ->addOption('--end', $this->endTime)
             ->addOption('--no-axis')
             ->addOption($this->borderColor ? $this->builder->addOption('--border-color', $this->borderColor) : '')
             ->getCommand();
@@ -142,9 +142,7 @@ class AudioWaveformBuilder
 
         if ($processResult->failed()) {
             Log::error("Failed to generate waveform", [
-                'inputFilename' => $this->inputFilename,
-                'outputFilename' => $this->outputFilename,
-                'error' => $processResult->errorOutput()
+                'output' => $processResult->errorOutput()
             ]);
         }
 
