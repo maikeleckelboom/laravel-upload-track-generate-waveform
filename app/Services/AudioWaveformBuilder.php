@@ -46,6 +46,12 @@ class AudioWaveformBuilder
         return $this;
     }
 
+    public function setAxisLabelColor(string $axisLabelColor): static
+    {
+        $this->axisLabelColor = $this->validateAndNormalizeColor($axisLabelColor);
+        return $this;
+    }
+
     public function setInputFilename(string $inputFilename): static
     {
         $this->inputFilename = $inputFilename;

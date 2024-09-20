@@ -10,6 +10,7 @@ use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
 use App\Jobs\AnalyzeAudioTempo;
 use App\Jobs\CreateWaveformData;
+use App\Jobs\CreateWaveformImage;
 use App\Jobs\PreprocessAudio;
 use App\Models\Track;
 use App\Services\UploadService;
@@ -55,10 +56,11 @@ class TrackController extends Controller
                 ->withCustomProperties(['original' => true])
                 ->toMediaLibrary('audio');
 
-            // todo: pipeline
-            PreprocessAudio::dispatch($track);
-            CreateWaveformData::dispatch($track);
-            AnalyzeAudioTempo::dispatch($track);
+            PreprocessAudio::withChain([
+                new CreateWaveformData($track),
+                new AnalyzeAudioTempo($track),
+                new CreateWaveformImage($track),
+            ])->dispatch($track);
 
             defer(fn() => $upload->delete());
         }

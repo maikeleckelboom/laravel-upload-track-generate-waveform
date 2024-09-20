@@ -5,7 +5,7 @@ namespace App\Services;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class AudioTempoService
+class DetectTempoService
 {
     /**
      * Calculate BPM from audio using aubio.
@@ -15,27 +15,21 @@ class AudioTempoService
      */
     public function calculateBPM(string $filePath): ?float
     {
-        // Run aubio beat command to get beat timestamps
         $process = new Process(['aubio', 'beat', $filePath]);
         $process->run();
 
-        // Check if the process was successful
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
-        // Extract timestamps from aubio output
         $output = $process->getOutput();
         $timestamps = $this->extractTimestamps($output);
 
         if (count($timestamps) < 2) {
-            return null; // Not enough data to calculate BPM
+            return null;
         }
 
-        // Calculate average interval and BPM
-        $intervals = $this->calculateIntervals($timestamps);
-        $averageInterval = array_sum($intervals) / count($intervals);
-        $bpm = 60 / $averageInterval;
+        $bpm = $this->averageBPMFromTimestamps($timestamps);
 
         return round($bpm, 2);
     }
@@ -48,7 +42,6 @@ class AudioTempoService
      */
     private function extractTimestamps(string $output): array
     {
-        // Each line in the aubio output contains a timestamp
         $lines = explode("\n", trim($output));
         $timestamps = array_filter($lines, function ($line) {
             return is_numeric(trim($line));
@@ -72,5 +65,16 @@ class AudioTempoService
         }
 
         return $intervals;
+    }
+
+    /**
+     * @param array $timestamps
+     * @return float|int
+     */
+    public function averageBPMFromTimestamps(array $timestamps): int|float
+    {
+        $intervals = $this->calculateIntervals($timestamps);
+        $averageInterval = array_sum($intervals) / count($intervals);
+        return 60 / $averageInterval;
     }
 }
