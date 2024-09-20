@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
 use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
 use InvalidArgumentException;
@@ -24,15 +23,15 @@ class AudioWaveformBuilder
     protected bool $axisLabels = false;
     protected string $axisLabelColor = 'D16D00FF';
     protected string $backgroundColor = 'FFFFFF00';
-    protected string $waveformColor = 'FFDE87FF';
+    protected string $waveformColor = 'F9F9F9FF';
     protected string $waveformStyle = 'normal';
-    protected int $width = 3840; // 1280;
-    protected int $height = 400; // 120;
-    protected float $startTime = 0;
-    protected float $endTime = 0;
-    protected int $barWidth = 1;
-    protected int $barGap = 0;
-    protected string $borderColor;
+    protected int $width = 1280; // (default: 800) // 3840; // 1280;
+    protected int $height = 150; // (default: 250) // 400; // 120;
+    protected float $start = 0;
+    protected float $end = 0;
+    protected int $barWidth = 8;
+    protected int $barGap = 4;
+    protected string|false $borderColor = false;
 
     public function setZoom(int $zoom): static
     {
@@ -82,9 +81,9 @@ class AudioWaveformBuilder
         return $this;
     }
 
-    public function setEndTime(float $endTime): static
+    public function setEnd(float $end): static
     {
-        $this->endTime = $endTime;
+        $this->end = $end;
         return $this;
     }
 
@@ -141,10 +140,26 @@ class AudioWaveformBuilder
         return $this;
     }
 
-    public function setStartTime(float $startTime): static
+    public function setStart(float $start): static
     {
-        $this->startTime = $startTime;
+        $this->start = $start;
         return $this;
+    }
+
+    private function buildBaseCommand(): CommandBuilder
+    {
+        return $this->builder
+            ->setCommand("audiowaveform")
+            ->addOption('--input-filename', $this->inputFilename)
+            ->addOption('--output-filename', $this->outputFilename)
+            ->addOption('--bits', $this->bits)
+            ->addOption('--amplitude-scale', $this->amplitudeScale)
+            ->addOption('--width', $this->width)
+            ->addOption('--height', $this->height)
+            ->addOption('--start', $this->start)
+            ->addConditionalOption('--end', $this->end, $this->end > 0)
+            ->addConditionalOption('--zoom', $this->zoom ?? null, isset($this->zoom))
+            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond ?? null, isset($this->pixelsPerSecond));
     }
 
     public function generate(): ProcessResult
@@ -153,8 +168,7 @@ class AudioWaveformBuilder
 
         logger([
             'message' => 'Running command',
-            'command' => $command,
-            'date' => Carbon::now('Europe/Amsterdam')->locale('nl_NL')->isoFormat('LLLL')
+            'command' => $command
         ]);
 
         $processResult = Process::run($command);
@@ -172,10 +186,10 @@ class AudioWaveformBuilder
             ->addOption('--background-color', $this->backgroundColor)
             ->addOption('--waveform-color', $this->waveformColor)
             ->addOption('--waveform-style', $this->waveformStyle)
-            ->addOption('--border-color', $this->borderColor)
             ->addOption('--bar-width', $this->barWidth)
             ->addOption('--bar-gap', $this->barGap)
-            ->addConditionalArgument('--axis-labels', '--no-axis', $this->axisLabels)
+            ->addConditionalOption('--border-color', $this->borderColor, $this->borderColor !== false)
+            ->addConditionalArgument('--with-axis-labels', '--no-axis', $this->axisLabels)
             ->addConditionalOption('--axis-label-color', $this->axisLabelColor, $this->axisLabels);
 
         $command = $commandBuilder->getCommand();
@@ -183,31 +197,18 @@ class AudioWaveformBuilder
         logger([
             'message' => 'Running command',
             'command' => $command,
-            'date' => Carbon::now('Europe/Amsterdam')->locale('nl_NL')->isoFormat('LLLL')
         ]);
 
         $processResult = Process::run($command);
 
         if ($processResult->failed()) {
-            logger()->error($processResult->errorOutput());
+            logger()->error('Failed to generate waveform image', [
+                'output' => $processResult->output(),
+                'error' => $processResult->errorOutput(),
+            ]);
         }
 
         return $processResult;
     }
 
-    private function buildBaseCommand(): CommandBuilder
-    {
-        return $this->builder
-            ->setCommand("audiowaveform")
-            ->addOption('--input-filename', $this->inputFilename)
-            ->addOption('--output-filename', $this->outputFilename)
-            ->addOption('--bits', $this->bits)
-            ->addOption('--amplitude-scale', $this->amplitudeScale)
-            ->addOption('--width', $this->width)
-            ->addOption('--height', $this->height)
-            ->addOption('--start', $this->startTime)
-            ->addConditionalOption('--end', $this->endTime, $this->endTime > 0)
-            ->addConditionalOption('--zoom', $this->zoom ?? null, isset($this->zoom))
-            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond ?? null, isset($this->pixelsPerSecond));
-    }
 }

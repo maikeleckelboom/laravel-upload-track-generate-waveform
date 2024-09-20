@@ -21,18 +21,18 @@ class CreateWaveformImage implements ShouldQueue
 
     public function handle(): void
     {
-        $inputFilename = $this->track->getFirstMedia('waveform')->getPath();
+        $inputFilename = $this->track
+            ->getFirstMedia('waveform', fn($media) => $media->hasCustomProperty('format', 'dat'))
+            ->getPath();
+
         $outputFilename = Str::replaceLast('dat', 'png', $inputFilename);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
-            ->setZoom(256)
-            ->setWidth(800)
-            ->setHeight(200)
-            ->setAxisLabels(true)
-            ->setAxisLabelColor('D16D00FF')
-            ->generate();
+            ->setEnd($this->track->duration)
+            ->setBits(16)
+            ->generateImage();
 
         if ($processResult->successful()) {
             $this->track
@@ -40,10 +40,5 @@ class CreateWaveformImage implements ShouldQueue
                 ->withCustomProperties(['format' => 'png'])
                 ->toMediaLibrary('waveform', 'waveform');
         }
-    }
-
-    private function bitsByDuration(): int
-    {
-        return $this->track->duration < 60 ? 16 : 8;
     }
 }

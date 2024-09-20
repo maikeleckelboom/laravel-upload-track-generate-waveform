@@ -58,8 +58,8 @@ class TrackController extends Controller
 
             PreprocessAudio::withChain([
                 new CreateWaveformData($track),
-                new AnalyzeAudioTempo($track),
                 new CreateWaveformImage($track),
+                new AnalyzeAudioTempo($track),
             ])->dispatch($track);
 
             defer(fn() => $upload->delete());
@@ -103,7 +103,7 @@ class TrackController extends Controller
 
     public function update(Request $request, Track $track)
     {
-        $track->update($request->only(['title', 'description']));
+        $track->update($request->only(['name', 'duration', 'bpm']));
 
         return response()->json($track);
     }
@@ -112,10 +112,9 @@ class TrackController extends Controller
     {
         try {
             $track->delete();
+            return response()->json(['message' => 'Track deleted']);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        return response()->json(['message' => 'Track deleted']);
     }
 }

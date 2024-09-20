@@ -33,7 +33,7 @@ class CreateWaveformData implements ShouldQueue
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($playbackAudio->getPath()))
             ->setOutputFilename(escapeshellarg($outputFilename))
-            ->setEndTime($this->track->duration)
+            ->setEnd($this->track->duration)
             ->setBits(8)
             ->generate();
 

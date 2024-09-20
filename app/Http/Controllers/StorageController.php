@@ -8,14 +8,12 @@ class StorageController extends Controller
 {
     public function __invoke(Request $request, string $disk, string $path)
     {
-        $path = "{$disk}/{$path}";
+        $storagePath = storage_path("app/{$disk}/{$path}");
 
-        if (!file_exists(storage_path("app/{$path}"))) {
-            abort(404);
+        if (!file_exists($storagePath)) {
+            abort(404, 'The requested file was not found.');
         }
 
-        logger()->info("Serving file: {$path}");
-
-        return response()->file(storage_path("app/{$path}"));
+        return response()->file($storagePath);
     }
 }
