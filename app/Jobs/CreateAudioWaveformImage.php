@@ -21,23 +21,15 @@ class CreateAudioWaveformImage implements ShouldQueue
 
     public function handle(): void
     {
-        $binaryConversion = $this->track
-            ->getMedia('waveform', fn($file) => $file->getCustomProperty('format') === 'json')
-            ->first();
+        $binaryConversion = $this->track->getFirstMedia('waveform');
 
         $inputFilename = $binaryConversion->getPath();
-        $outputFilename = Str::replaceLast('json', 'png', $inputFilename);
+        $outputFilename = Str::replaceLast('dat', 'png', $inputFilename);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
-            ->setWaveformStyle('normal')
             ->setWaveformColor('D2D1D9')
-            ->setBarWidth(1)
-            ->setBarGap(0)
-            ->setWidth(1200)
-            ->setHeight(100)
-            ->setEndTime($this->track->duration)
             ->generate();
 
         if ($processResult->successful()) {
@@ -49,5 +41,10 @@ class CreateAudioWaveformImage implements ShouldQueue
                 ])
                 ->toMediaLibrary('waveform', 'waveform');
         }
+    }
+
+    private function bitsByDuration(): int
+    {
+        return $this->track->duration < 60 ? 16 : 8;
     }
 }

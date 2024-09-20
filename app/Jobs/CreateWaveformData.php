@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Str;
 
-class CreateAudioWaveformData implements ShouldQueue
+class CreateWaveformData implements ShouldQueue
 {
     use Queueable;
 
@@ -34,8 +34,6 @@ class CreateAudioWaveformData implements ShouldQueue
             ->setInputFilename(escapeshellarg($playbackAudio->getPath()))
             ->setOutputFilename(escapeshellarg($outputFilename))
             ->setEndTime($this->track->duration)
-            ->setWidth( 1280)
-            ->setHeight(120)
             ->setBits(8)
             ->generate();
 
@@ -45,10 +43,5 @@ class CreateAudioWaveformData implements ShouldQueue
                 ->withCustomProperties(['format' => 'dat'])
                 ->toMediaLibrary('waveform', 'waveform');
         }
-    }
-
-    private function bitsByDuration(): int
-    {
-        return $this->track->duration < 60 ? 16 : 8;
     }
 }

@@ -9,20 +9,11 @@ use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class AudioProcessor
 {
-    private string $conversionFormat;
-
-    public function __construct()
-    {
-        $this->conversionFormat = config('audiowaveform.conversion_format', 'opus');
-    }
-
     public function process(Track $track): void
     {
-        if ($this->isSupportedFormat($track)) {
-            $this->addOriginalFileAsPlayback($track);
-        } else {
-            $this->addConvertedFileAsPlayback($track);
-        }
+        $this->isSupportedFormat($track)
+            ? $this->addOriginalFileAsPlayback($track)
+            : $this->addConvertedFileAsPlayback($track);
 
         $track->duration = $this->getDurationInSeconds($track);
         $track->save();
@@ -53,7 +44,9 @@ class AudioProcessor
 
         $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
 
-        $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot());
+        $conversionFormat = config('audiowaveform.conversion_format');
+
+        $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot(), $conversionFormat);
 
         $ffmpeg->export()
             ->toDisk($original->disk)
@@ -65,22 +58,16 @@ class AudioProcessor
         $track->addMediaFromDisk($outputFilename, $original->disk)
             ->withCustomProperties([
                 'type' => 'playback',
-                'format' => $this->conversionFormat
+                'format' => $conversionFormat
             ])
             ->toMediaLibrary('audio', 'playback');
     }
 
-    private function convertToPlaybackFormat(string $path): string
+    private function convertToPlaybackFormat(string $path, string $format): string
     {
         $dirname = pathinfo($path, PATHINFO_DIRNAME);
         $filename = pathinfo($path, PATHINFO_FILENAME);
-        return "{$dirname}/{$filename}." . $this->conversionFormat;
-    }
-
-    private function isConversionFormat(Track $track): bool
-    {
-        $conversionFormat = config('audiowaveform.conversion_format', 'opus');
-        return $track->getFirstMedia('audio')->extension === $conversionFormat;
+        return "{$dirname}/{$filename}." . $format;
     }
 
     private function isSupportedFormat(Track $track): bool
@@ -90,4 +77,9 @@ class AudioProcessor
         return in_array($format, $supportedFormats);
     }
 
+    private function isConversionFormat(Track $track): bool
+    {
+        $conversionFormat = config('audiowaveform.conversion_format', 'opus');
+        return $track->getFirstMedia('audio')->extension === $conversionFormat;
+    }
 }

@@ -8,9 +8,9 @@ use App\Exceptions\ChunkCannotBeStored;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
-use App\Jobs\CreateAudioWaveformData;
+use App\Jobs\CreateWaveformData;
 use App\Jobs\CreateAudioWaveformImage;
-use App\Jobs\PreprocessAudioFile;
+use App\Jobs\PreprocessAudio;
 use App\Models\Track;
 use App\Services\UploadService;
 use Illuminate\Http\Request;
@@ -28,9 +28,10 @@ class TrackController extends Controller
     public function index(Request $request)
     {
         $tracks = $request->user()->tracks()
-            ->get()
+            ->paginate(10)
             ->sortByDesc('created_at')
-            ->values();
+            ->values()
+            ->all();
 
         return response()->json($tracks);
     }
@@ -54,8 +55,10 @@ class TrackController extends Controller
                 ->withCustomProperties(['original' => true])
                 ->toMediaLibrary('audio');
 
-            PreprocessAudioFile::dispatch($track);
-            CreateAudioWaveformData::dispatch($track);
+            // todo: pipeline
+            PreprocessAudio::dispatch($track);
+            CreateWaveformData::dispatch($track);
+//            CreateAudioWaveformImage::dispatch($track);
 
             defer(fn() => $upload->delete());
         }
