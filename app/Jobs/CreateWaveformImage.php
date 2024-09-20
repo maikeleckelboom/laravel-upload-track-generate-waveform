@@ -27,9 +27,11 @@ class CreateWaveformImage implements ShouldQueue
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
+            ->setZoom(256)
+            ->setWidth(800)
+            ->setHeight(200)
             ->setAxisLabels(true)
             ->setAxisLabelColor('D16D00FF')
-            ->setEndTime($this->track->duration)
             ->generate();
 
         if ($processResult->successful()) {
