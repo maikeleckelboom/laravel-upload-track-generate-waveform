@@ -8,11 +8,12 @@ use App\Exceptions\ChunkCannotBeStored;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
+use App\Jobs\AnalyzeAudioTempo;
 use App\Jobs\CreateWaveformData;
-use App\Jobs\CreateAudioWaveformImage;
 use App\Jobs\PreprocessAudio;
 use App\Models\Track;
 use App\Services\UploadService;
+use Exception;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -30,8 +31,7 @@ class TrackController extends Controller
         $tracks = $request->user()->tracks()
             ->paginate(10)
             ->sortByDesc('created_at')
-            ->values()
-            ->all();
+            ->values();
 
         return response()->json($tracks);
     }
@@ -58,7 +58,7 @@ class TrackController extends Controller
             // todo: pipeline
             PreprocessAudio::dispatch($track);
             CreateWaveformData::dispatch($track);
-//            CreateAudioWaveformImage::dispatch($track);
+            AnalyzeAudioTempo::dispatch($track);
 
             defer(fn() => $upload->delete());
         }
@@ -110,7 +110,7 @@ class TrackController extends Controller
     {
         try {
             $track->delete();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
 
