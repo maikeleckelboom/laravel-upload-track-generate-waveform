@@ -24,7 +24,7 @@ class AudioProcessor
         $track->addMedia($original->getPath())
             ->preservingOriginal()
             ->withCustomProperties([
-                'type' => 'playback',
+                'playback' => true,
                 'format' => $original->extension
             ])
             ->toMediaLibrary('audio', 'playback');
@@ -43,9 +43,9 @@ class AudioProcessor
 
         $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
 
-        $conversionFormat = config('audiowaveform.conversion_format');
+        $playbackFormat = config('audio_waveform.playback_format');
 
-        $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot(), $conversionFormat);
+        $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot(), $playbackFormat);
 
         $ffmpeg->export()
             ->toDisk($original->disk)
@@ -56,8 +56,8 @@ class AudioProcessor
 
         $track->addMediaFromDisk($outputFilename, $original->disk)
             ->withCustomProperties([
-                'type' => 'playback',
-                'format' => $conversionFormat
+                'playback' => true,
+                'format' => $playbackFormat
             ])
             ->toMediaLibrary('audio', 'playback');
     }
@@ -72,13 +72,13 @@ class AudioProcessor
     private function isSupportedFormat(Track $track): bool
     {
         $format = $track->getFirstMedia('audio')->extension;
-        $supportedFormats = explode(',', config('audiowaveform.supported_formats'));
+        $supportedFormats = explode(',', config('audio_waveform.supported_formats'));
         return in_array($format, $supportedFormats);
     }
 
     private function isConversionFormat(Track $track): bool
     {
-        $conversionFormat = config('audiowaveform.conversion_format', 'opus');
+        $conversionFormat = config('audio_waveform.playback_format', 'opus');
         return $track->getFirstMedia('audio')->extension === $conversionFormat;
     }
 }

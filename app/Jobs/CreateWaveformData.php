@@ -22,7 +22,7 @@ class CreateWaveformData implements ShouldQueue
     public function handle(): void
     {
         $playbackAudio = $this->track
-            ->getFirstMedia('audio', fn($file) => $file->getCustomProperty('type') === 'playback');
+            ->getFirstMedia('audio', fn($file) => $file->getCustomProperty('playback'));
 
         $outputFilename = Str::replaceLast(
             $playbackAudio->getCustomProperty('format'),
@@ -40,7 +40,7 @@ class CreateWaveformData implements ShouldQueue
         if ($processResult->successful()) {
             $this->track
                 ->addMedia($outputFilename)
-                ->withCustomProperties(['format' => 'dat'])
+                ->withCustomProperties(['waveform' => true, 'format' => 'dat'])
                 ->toMediaLibrary('waveform', 'waveform');
         }
     }

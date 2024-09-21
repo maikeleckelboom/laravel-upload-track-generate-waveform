@@ -26,11 +26,11 @@ class AudioWaveformBuilder
     protected string $waveformColor = 'F9F9F9FF';
     protected string $waveformStyle = 'normal';
     protected int $width = 1280; // (default: 800) // 3840; // 1280;
-    protected int $height = 150; // (default: 250) // 400; // 120;
+    protected int $height = 120; // (default: 250) // 400; // 120;
     protected float $start = 0;
     protected float $end = 0;
-    protected int $barWidth = 8;
-    protected int $barGap = 4;
+    protected int $barWidth = 2; // (default: 8)
+    protected int $barGap = 1; // (default: 4)
     protected string|false $borderColor = false;
 
     public function setZoom(int $zoom): static
@@ -166,10 +166,7 @@ class AudioWaveformBuilder
     {
         $command = $this->buildBaseCommand()->getCommand();
 
-        logger([
-            'message' => 'Running command',
-            'command' => $command
-        ]);
+        logger(['command' => $command]);
 
         $processResult = Process::run($command);
 
@@ -194,10 +191,7 @@ class AudioWaveformBuilder
 
         $command = $commandBuilder->getCommand();
 
-        logger([
-            'message' => 'Running command',
-            'command' => $command,
-        ]);
+        logger(['command' => $command]);
 
         $processResult = Process::run($command);
 
