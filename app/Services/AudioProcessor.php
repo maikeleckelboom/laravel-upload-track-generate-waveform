@@ -72,7 +72,7 @@ class AudioProcessor
     private function isSupportedFormat(Track $track): bool
     {
         $format = $track->getFirstMedia('audio')->extension;
-        $supportedFormats = explode(',', config('audio_waveform.supported_formats'));
+        $supportedFormats = explode(',', config('audio_waveform.formats'));
         return in_array($format, $supportedFormats);
     }
 
