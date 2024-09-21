@@ -22,16 +22,18 @@ class CreateWaveformData implements ShouldQueue
     public function handle(): void
     {
         $playbackAudio = $this->track
-            ->getFirstMedia('audio', fn($file) => $file->getCustomProperty('playback'));
+            ->getFirstMedia('audio', fn($file) => !!$file->getCustomProperty('playback'));
 
-        $outputFilename = Str::replaceLast(
-            $playbackAudio->getCustomProperty('format'),
-            'dat',
-            $playbackAudio->getPath()
-        );
+        $playbackAudioPath = $playbackAudio->getPath();
+
+        $playbackFormat = $playbackAudio->extension;
+
+        $outputFilename = Str::replaceLast($playbackFormat, 'dat', $playbackAudioPath);
+
+        logger('outputFilename: ' . $outputFilename);
 
         $processResult = $this->builder
-            ->setInputFilename(escapeshellarg($playbackAudio->getPath()))
+            ->setInputFilename(escapeshellarg($playbackAudioPath))
             ->setOutputFilename(escapeshellarg($outputFilename))
             ->setEnd($this->track->duration)
             ->setBits(8)

@@ -73,6 +73,8 @@ class AudioProcessor
     {
         $format = $track->getFirstMedia('audio')->extension;
         $supportedFormats = explode(',', config('audio_waveform.formats'));
+        logger($supportedFormats);
+        logger(in_array($format, $supportedFormats));
         return in_array($format, $supportedFormats);
     }
 

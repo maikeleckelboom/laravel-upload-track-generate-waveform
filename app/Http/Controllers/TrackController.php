@@ -70,10 +70,10 @@ class TrackController extends Controller
 
     public function waveform(Request $request, Track $track)
     {
-        $format = $request->query('format', 'dat');
+        $format = $request->query('format', config('audio_waveform.waveform_data_format'));
 
-        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === $format;
-        $waveform = $track->getFirstMedia('waveform', $inBinaryFormat);
+        $matchDataFormat = fn($file) => $file->getCustomProperty('format') === $format;
+        $waveform = $track->getFirstMedia('waveform', $matchDataFormat);
 
         return response()->stream(fn() => $waveform->stream(), 200, [
             'Content-Type' => $waveform->mime_type,

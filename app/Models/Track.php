@@ -29,6 +29,10 @@ class Track extends Model implements HasMedia
         'is_waveform_image_ready',
     ];
 
+    protected $hidden = [
+        'media',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -57,14 +61,13 @@ class Track extends Model implements HasMedia
 
     public function getWaveformDataUrlAttribute(): ?string
     {
-        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === 'dat';
+        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === config('audio_waveform.waveform_data_format');
         return $this->getFirstMedia('waveform', $inBinaryFormat)?->getUrl();
     }
 
     public function getWaveformImageUrlAttribute(): ?string
     {
-        $isTypeImage = fn($file) => $file->getCustomProperty('image');
-        return $this->getFirstMedia('waveform', $isTypeImage)?->getUrl();
+        return $this->getFirstMedia('waveform',  fn($file) => $file->getCustomProperty('image'))?->getUrl();
     }
 
     public function getIsWaveformReadyAttribute(): bool
@@ -79,7 +82,7 @@ class Track extends Model implements HasMedia
 
     public function getIsWaveformImageReadyAttribute(): bool
     {
-        return !is_null($this->waveform_image);
+        return !is_null($this->waveform_image_url);
     }
 
     public function registerMediaConversions(?Media $media = null): void

@@ -16,8 +16,8 @@ class AudioWaveformBuilder
 
     protected string $inputFilename;
     protected string $outputFilename;
-    protected int $zoom;
-    protected int $pixelsPerSecond;
+    protected int|string $zoom = 'auto';
+    protected int $pixelsPerSecond = 100;
     protected int $bits = 8;
     protected float $amplitudeScale = 0.95;
     protected bool $axisLabels = false;
@@ -33,7 +33,7 @@ class AudioWaveformBuilder
     protected int $barGap = 1; // (default: 4)
     protected string|false $borderColor = false;
 
-    public function setZoom(int $zoom): static
+    public function setZoom(int|string $zoom): static
     {
         $this->zoom = $zoom;
         return $this;
@@ -158,8 +158,8 @@ class AudioWaveformBuilder
             ->addOption('--height', $this->height)
             ->addOption('--start', $this->start)
             ->addConditionalOption('--end', $this->end, $this->end > 0)
-            ->addConditionalOption('--zoom', $this->zoom ?? null, isset($this->zoom))
-            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond ?? null, isset($this->pixelsPerSecond));
+            ->addConditionalOption('--zoom', $this->zoom, $this->zoom !== 'auto')
+            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond, $this->pixelsPerSecond !== 100);
     }
 
     public function generate(): ProcessResult
