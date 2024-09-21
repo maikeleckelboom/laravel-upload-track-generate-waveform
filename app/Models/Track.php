@@ -61,13 +61,16 @@ class Track extends Model implements HasMedia
 
     public function getWaveformDataUrlAttribute(): ?string
     {
-        $inBinaryFormat = fn($file) => $file->getCustomProperty('format') === config('audio_waveform.waveform_data_format');
-        return $this->getFirstMedia('waveform', $inBinaryFormat)?->getUrl();
+        $typeData = fn($file) => $file->getCustomProperty('type') === 'data';
+        $dataFormat = fn($file) => $file->getCustomProperty('format') === config('audio_waveform.waveform_data_format', 'dat');
+        return $this->getFirstMedia('waveform', fn($file) => $typeData($file) && $dataFormat($file))?->getUrl();
     }
 
     public function getWaveformImageUrlAttribute(): ?string
     {
-        return $this->getFirstMedia('waveform',  fn($file) => $file->getCustomProperty('image'))?->getUrl();
+        $imageFormat = fn($file) => $file->getCustomProperty('type') === 'image';
+        $imageType = fn($file) => $file->getCustomProperty('format') === config('audio_waveform.waveform_image_format', 'png');
+        return $this->getFirstMedia('waveform', fn($file) => $imageFormat($file) && $imageType($file))?->getUrl();
     }
 
     public function getIsWaveformReadyAttribute(): bool

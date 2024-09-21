@@ -16,8 +16,8 @@ class AudioWaveformBuilder
 
     protected string $inputFilename;
     protected string $outputFilename;
-    protected int|string $zoom = 'auto';
-    protected int $pixelsPerSecond = 100;
+    protected int|null $pixelsPerSecond = null; // (default: 100)
+    protected int|string|null $zoom = null; // (default: 'auto')
     protected int $bits = 8;
     protected float $amplitudeScale = 0.95;
     protected bool $axisLabels = false;
@@ -158,15 +158,18 @@ class AudioWaveformBuilder
             ->addOption('--height', $this->height)
             ->addOption('--start', $this->start)
             ->addConditionalOption('--end', $this->end, $this->end > 0)
-            ->addConditionalOption('--zoom', $this->zoom, $this->zoom !== 'auto')
-            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond, $this->pixelsPerSecond !== 100);
+            ->addConditionalOption('--zoom', $this->zoom, !!$this->zoom && !($this->end > 0))
+            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond, !!$this->pixelsPerSecond && !($this->end > 0) && !$this->zoom);
+
     }
 
     public function generate(): ProcessResult
     {
         $command = $this->buildBaseCommand()->getCommand();
 
-        logger(['command' => $command]);
+        logger(['GENERATE DATA' => $command]);
+
+
 
         $processResult = Process::run($command);
 
@@ -191,7 +194,7 @@ class AudioWaveformBuilder
 
         $command = $commandBuilder->getCommand();
 
-        logger(['command' => $command]);
+        logger(['GENERATE IMAGE' => $command]);
 
         $processResult = Process::run($command);
 

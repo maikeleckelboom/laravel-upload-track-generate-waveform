@@ -25,7 +25,8 @@ class AudioProcessor
             ->preservingOriginal()
             ->withCustomProperties([
                 'playback' => true,
-                'format' => $original->extension
+                'format' => $original->extension,
+                'type' => 'audio',
             ])
             ->toMediaLibrary('audio', 'playback');
     }
@@ -57,7 +58,8 @@ class AudioProcessor
         $track->addMediaFromDisk($outputFilename, $original->disk)
             ->withCustomProperties([
                 'playback' => true,
-                'format' => $playbackFormat
+                'format' => $playbackFormat,
+                'type' => 'audio',
             ])
             ->toMediaLibrary('audio', 'playback');
     }
@@ -73,14 +75,12 @@ class AudioProcessor
     {
         $format = $track->getFirstMedia('audio')->extension;
         $supportedFormats = explode(',', config('audio_waveform.formats'));
-        logger($supportedFormats);
-        logger(in_array($format, $supportedFormats));
         return in_array($format, $supportedFormats);
     }
 
-    private function isConversionFormat(Track $track): bool
+    private function isPlaybackFormat(Track $track): bool
     {
-        $conversionFormat = config('audio_waveform.playback_format', 'opus');
-        return $track->getFirstMedia('audio')->extension === $conversionFormat;
+        $playbackFormat = config('audio_waveform.playback_format', 'opus');
+        return $track->getFirstMedia('audio')->extension === $playbackFormat;
     }
 }

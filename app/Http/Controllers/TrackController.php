@@ -68,19 +68,6 @@ class TrackController extends Controller
         return response()->json(UploadResource::make($upload));
     }
 
-    public function waveform(Request $request, Track $track)
-    {
-        $format = $request->query('format', config('audio_waveform.waveform_data_format'));
-
-        $matchDataFormat = fn($file) => $file->getCustomProperty('format') === $format;
-        $waveform = $track->getFirstMedia('waveform', $matchDataFormat);
-
-        return response()->stream(fn() => $waveform->stream(), 200, [
-            'Content-Type' => $waveform->mime_type,
-            'Content-Length' => $waveform->size,
-        ]);
-    }
-
     public function playback(Request $request, Track $track)
     {
         $audio = $track->getFirstMedia('audio');
@@ -116,5 +103,34 @@ class TrackController extends Controller
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+
+
+
+//    public function waveform(Request $request, Track $track)
+//    {
+//        $format = $request->query('format', config('audio_waveform.waveform_data_format'));
+//
+//        $matchDataFormat = fn($file) => $file->getCustomProperty('format') === $format;
+//        $waveform = $track->getFirstMedia('waveform', $matchDataFormat);
+//
+//        return response()->stream(fn() => $waveform->stream(), 200, [
+//            'Content-Type' => $waveform->mime_type,
+//            'Content-Length' => $waveform->size,
+//        ]);
+//    }
+
+    public function waveformStatus(Request $request, Track $track)
+    {
+        $types = ['image', 'data'];
+        $type = $request->query('type', 'data');
+
+        $isTypeReady = match ($type) {
+            'waveform' => fn($file) => $file->getCustomProperty('waveform'),
+            'image' => fn($file) => $file->getCustomProperty('image'),
+            default => fn($file) => false,
+        };
+
     }
 }
