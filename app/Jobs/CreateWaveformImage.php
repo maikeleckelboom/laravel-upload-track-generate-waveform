@@ -79,7 +79,7 @@ class CreateWaveformImage implements ShouldQueue
 
         $formattedParams = collect($params)
                 ->map(fn($value, $key) => $this->formatParam($key, $value))
-                ->implode('_') . ".{$this->imageFormat}";
+                ->implode('_');
 
         return Str::replaceLast(".{$this->imageFormat}",
             "_{$formattedParams}.{$this->imageFormat}",
