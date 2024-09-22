@@ -7,12 +7,16 @@ use App\Services\AudioWaveformBuilder;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class CreateWaveformImage implements ShouldQueue
 {
     use Queueable;
 
+    private const string WAVEFORM_STYLE = 'bars';
+    private const int DEFAULT_BAR_WIDTH = 4;
+    private const int DEFAULT_BAR_GAP = 2;
     private readonly AudioWaveformBuilder $builder;
     private readonly string $imageFormat;
     private readonly string $dataFormat;
@@ -30,35 +34,22 @@ class CreateWaveformImage implements ShouldQueue
         $isData = fn($file) => $file->getCustomProperty('type') === 'data';
         $formatData = fn($file) => $file->getCustomProperty('format') === $this->dataFormat;
 
-        $media = $this->track->getFirstMedia(
-            'waveform',
-            fn($file) => $isWaveform($file) && $isData($file) && $formatData($file)
-        );
-
-        $inputFilename = $media->getPath();
-        $outputFilename = Str::replaceLast($this->dataFormat, $this->imageFormat, $inputFilename);
+        $inputFilename = $this->track
+            ->getFirstMedia(
+                'waveform',
+                fn($file) => $isWaveform($file) && $isData($file) && $formatData($file)
+            )
+            ?->getPath();
 
         $params = collect([
-            'waveformStyle' => 'bars',
-            'barWidth' => 4,
-            'barGap' => 2,
-            'bits' => ceil($this->track->duration) < 5 ? 16 : 8,
+            'waveformStyle' => self::WAVEFORM_STYLE,
+            'barWidth' => self::DEFAULT_BAR_WIDTH,
+            'barGap' => self::DEFAULT_BAR_GAP,
+            'bits' => $this->getBits($this->track->duration),
             'end' => $this->track->duration,
         ]);
 
-        $formattedParams = $params->map(fn($value, $key) => match ($key) {
-                'waveformStyle' => "waveform-{$value}",
-                'barWidth' => "bar-width-{$value}",
-                'barGap' => "bar-gap-{$value}",
-                'bits' => "bits-{$value}",
-                'end' => "end-" . Carbon::createFromTimestamp($value)->format('i_s'),
-                default => "{$key}_{$value}",
-            })->implode('_') . ".{$this->imageFormat}";
-
-        $outputFilename = Str::replaceLast(".{$this->imageFormat}",
-            "_{$formattedParams}.{$this->imageFormat}",
-            $outputFilename
-        );
+        $outputFilename = $this->createOutputFilename($inputFilename, $params);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
@@ -80,5 +71,50 @@ class CreateWaveformImage implements ShouldQueue
                 ])
                 ->toMediaLibrary('waveform', 'waveform');
         }
+    }
+
+    private function createOutputFilename(string $inputFilename, Collection|array $params): string
+    {
+        $outputFilename = Str::replaceLast($this->dataFormat, $this->imageFormat, $inputFilename);
+
+        $formattedParams = collect($params)
+                ->map(fn($value, $key) => $this->formatParam($key, $value))
+                ->implode('_') . ".{$this->imageFormat}";
+
+        return Str::replaceLast(".{$this->imageFormat}",
+            "_{$formattedParams}.{$this->imageFormat}",
+            $outputFilename
+        );
+    }
+
+    /**
+     * Determine the bits based on track duration.
+     */
+    private function getBits(int $duration): int
+    {
+        return ceil($duration) < 5 ? 16 : 8;
+    }
+
+    /**
+     * Format the parameters into the desired string format.
+     */
+    private function formatParam(string $key, $value): string
+    {
+        return match ($key) {
+            'waveformStyle' => "style-{$value}",
+            'barWidth' => "bar-width-{$value}",
+            'barGap' => "bar-gap-{$value}",
+            'bits' => "bits-{$value}",
+            'end' => $this->formatTimestamp($value),
+            default => "{$key}_{$value}",
+        };
+    }
+
+    /**
+     * Format the timestamp for the 'end' parameter.
+     */
+    private function formatTimestamp(int $timestamp): string
+    {
+        return 'end-' . Carbon::createFromTimestamp($timestamp)->format('i_s');
     }
 }
