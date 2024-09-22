@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Track;
 use App\Services\AudioWaveformBuilder;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Str;
@@ -37,18 +38,36 @@ class CreateWaveformImage implements ShouldQueue
         $inputFilename = $media->getPath();
         $outputFilename = Str::replaceLast($this->dataFormat, $this->imageFormat, $inputFilename);
 
-        // if length is below 5 seconds, 16bit
-        // if length is above 5 seconds, 8bit
-        $bits = ceil($this->track->duration) < 5 ? 16 : 8;
+        $params = collect([
+            'waveformStyle' => 'bars',
+            'barWidth' => 4,
+            'barGap' => 2,
+            'bits' => ceil($this->track->duration) < 5 ? 16 : 8,
+            'end' => $this->track->duration,
+        ]);
+
+        $formattedParams = $params->map(fn($value, $key) => match ($key) {
+                'waveformStyle' => "waveform-{$value}",
+                'barWidth' => "bar-width-{$value}",
+                'barGap' => "bar-gap-{$value}",
+                'bits' => "bits-{$value}",
+                'end' => "end-" . Carbon::createFromTimestamp($value)->format('i_s'),
+                default => "{$key}_{$value}",
+            })->implode('_') . ".{$this->imageFormat}";
+
+        $outputFilename = Str::replaceLast(".{$this->imageFormat}",
+            "_{$formattedParams}.{$this->imageFormat}",
+            $outputFilename
+        );
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
-            ->setBits($bits)
-            ->setEnd($this->track->duration)
-            ->setWaveformStyle('bars')
-            ->setBarWidth(4)
-            ->setBarGap(2)
+            ->setWaveformStyle($params->get('waveformStyle'))
+            ->setBarWidth($params->get('barWidth'))
+            ->setBarGap($params->get('barGap'))
+            ->setBits($params->get('bits'))
+            ->setEnd($params->get('end'))
             ->generateImage();
 
         if ($processResult->successful()) {
