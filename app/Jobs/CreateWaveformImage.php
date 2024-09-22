@@ -16,7 +16,6 @@ class CreateWaveformImage implements ShouldQueue
     private readonly string $imageFormat;
     private readonly string $dataFormat;
 
-
     public function __construct(private readonly Track $track)
     {
         $this->builder = new AudioWaveformBuilder();
@@ -38,13 +37,18 @@ class CreateWaveformImage implements ShouldQueue
         $inputFilename = $media->getPath();
         $outputFilename = Str::replaceLast($this->dataFormat, $this->imageFormat, $inputFilename);
 
+        // if length is below 5 seconds, 16bit
+        // if length is above 5 seconds, 8bit
+        $bits = ceil($this->track->duration) < 5 ? 16 : 8;
+
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
+            ->setBits($bits)
+            ->setEnd($this->track->duration)
+            ->setWaveformStyle('bars')
             ->setBarWidth(4)
             ->setBarGap(2)
-            ->setWaveformStyle('bars')
-            ->setEnd($this->track->duration)
             ->generateImage();
 
         if ($processResult->successful()) {

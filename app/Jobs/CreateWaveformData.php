@@ -37,6 +37,7 @@ class CreateWaveformData implements ShouldQueue
             ->setOutputFilename(escapeshellarg($outputFilename))
             ->setEnd($this->track->duration)
             ->setBits(8)
+            ->setQuiet(true)
             ->generate();
 
         if ($processResult->successful()) {

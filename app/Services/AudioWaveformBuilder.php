@@ -16,22 +16,56 @@ class AudioWaveformBuilder
 
     protected string $inputFilename;
     protected string $outputFilename;
+    protected bool $quiet = false; // (default: false)
+    protected bool $help = false; // (default: false)
+    protected bool $version = false; // (default: false)
+    protected bool $splitChannels = false; // (default: false)
     protected int|null $pixelsPerSecond = null; // (default: 100)
-    protected int|string|null $zoom = null; // (default: 'auto')
-    protected int $bits = 8;
-    protected float $amplitudeScale = 0.95;
-    protected bool $axisLabels = false;
+    protected int|string|null $zoom = null; // (default: 256)
+    protected int $bits = 8; // (default: 16)
+    protected float $amplitudeScale = 0.95; // (default: 1)
+    protected bool $axisLabels = false; // (default: true)
     protected string $axisLabelColor = 'D16D00FF';
     protected string $backgroundColor = 'FFFFFF00';
     protected string $waveformColor = 'F9F9F9FF';
     protected string $waveformStyle = 'normal';
-    protected int $width = 1280; // (default: 800) // 3840; // 1280;
-    protected int $height = 120; // (default: 250) // 400; // 120;
-    protected float $start = 0;
-    protected float $end = 0;
+    protected int $width = 1280; // (default: 800)
+    protected int $height = 120; // (default: 250)
+    protected float $start = 0; // (default: 0)
+    protected float $end = 0; // (default: 0)
     protected int $barWidth = 2; // (default: 8)
     protected int $barGap = 1; // (default: 4)
     protected string|false $borderColor = false;
+
+
+    public function setHelp(bool $help): static
+    {
+        $this->help = $help;
+        return $this;
+    }
+
+    public function setVersion(bool $version): static
+    {
+        $this->version = $version;
+        return $this;
+    }
+
+    public function setQuiet(bool $quiet): static
+    {
+        $this->quiet = $quiet;
+        return $this;
+    }
+    public function setInputFilename(string $inputFilename): static
+    {
+        $this->inputFilename = $inputFilename;
+        return $this;
+    }
+
+    public function setOutputFilename(string $outputFilename): static
+    {
+        $this->outputFilename = $outputFilename;
+        return $this;
+    }
 
     public function setZoom(int|string $zoom): static
     {
@@ -51,18 +85,17 @@ class AudioWaveformBuilder
         return $this;
     }
 
-    public function setInputFilename(string $inputFilename): static
+    public function setSplitChannels(bool $splitChannels): static
     {
-        $this->inputFilename = $inputFilename;
+        $this->splitChannels = $splitChannels;
         return $this;
     }
 
-    public function setOutputFilename(string $outputFilename): static
+    public function setPixelsPerSecond(int $pixelsPerSecond): static
     {
-        $this->outputFilename = $outputFilename;
+        $this->pixelsPerSecond = $pixelsPerSecond;
         return $this;
     }
-
     public function setBits(int $bits): static
     {
         $this->bits = $bits;
@@ -78,6 +111,13 @@ class AudioWaveformBuilder
     public function setHeight(int $height): static
     {
         $this->height = $height;
+        return $this;
+    }
+
+
+    public function setStart(float $start): static
+    {
+        $this->start = $start;
         return $this;
     }
 
@@ -105,17 +145,6 @@ class AudioWaveformBuilder
         return $this;
     }
 
-    private function validateAndNormalizeColor(string $color): string
-    {
-        $color = ltrim($color, '#');
-        return match (strlen($color)) {
-            3 => strtoupper($color . $color . 'FF'),
-            6 => strtoupper($color . 'FF'),
-            8 => strtoupper($color),
-            default => throw new InvalidArgumentException("Invalid color code: $color"),
-        };
-    }
-
     public function setWaveformStyle(string $waveformStyle): static
     {
         $this->waveformStyle = $waveformStyle;
@@ -133,17 +162,21 @@ class AudioWaveformBuilder
         $this->barGap = $barGap;
         return $this;
     }
-
     public function setAmplitudeScale(float $amplitudeScale): static
     {
         $this->amplitudeScale = $amplitudeScale;
         return $this;
     }
 
-    public function setStart(float $start): static
+    private function validateAndNormalizeColor(string $color): string
     {
-        $this->start = $start;
-        return $this;
+        $color = ltrim($color, '#');
+        return match (strlen($color)) {
+            3 => strtoupper($color . $color . 'FF'),
+            6 => strtoupper($color . 'FF'),
+            8 => strtoupper($color),
+            default => throw new InvalidArgumentException("Invalid color code: $color"),
+        };
     }
 
     private function buildBaseCommand(): CommandBuilder
@@ -167,14 +200,13 @@ class AudioWaveformBuilder
     {
         $command = $this->buildBaseCommand()->getCommand();
 
-        logger(['GENERATE DATA' => $command]);
-
-
-
         $processResult = Process::run($command);
 
         if ($processResult->failed()) {
-            logger()->error($processResult->errorOutput());
+            logger()->error('Failed to generate waveform data', [
+                'output' => $processResult->output(),
+                'error' => $processResult->errorOutput(),
+            ]);
         }
 
         return $processResult;
@@ -193,8 +225,6 @@ class AudioWaveformBuilder
             ->addConditionalOption('--axis-label-color', $this->axisLabelColor, $this->axisLabels);
 
         $command = $commandBuilder->getCommand();
-
-        logger(['GENERATE IMAGE' => $command]);
 
         $processResult = Process::run($command);
 

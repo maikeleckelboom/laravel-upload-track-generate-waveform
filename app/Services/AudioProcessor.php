@@ -53,6 +53,8 @@ class AudioProcessor
             ->inFormat(new Opus)
             ->addFilter('-strict')
             ->addFilter('-2')
+            ->addFilter('-loglevel')
+            ->addFilter('quiet')
             ->save($outputFilename);
 
         $track->addMediaFromDisk($outputFilename, $original->disk)
