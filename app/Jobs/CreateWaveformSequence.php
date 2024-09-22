@@ -10,15 +10,15 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class CreateWaveformImage implements ShouldQueue
+class CreateWaveformSequence implements ShouldQueue
 {
     use Queueable;
 
+    final const int DEFAULT_BITS = 8;
+    final const string WAVEFORM_STYLE = 'bars';
+    final const int DEFAULT_BAR_WIDTH = 4;
+    final const int DEFAULT_BAR_GAP = 2;
     private readonly AudioWaveformBuilder $builder;
-    private const int DEFAULT_BITS = 8;
-    private const string WAVEFORM_STYLE = 'bars';
-    private const int DEFAULT_BAR_WIDTH = 4;
-    private const int DEFAULT_BAR_GAP = 2;
 
     private readonly string $imageFormat;
     private readonly string $dataFormat;
@@ -33,49 +33,57 @@ class CreateWaveformImage implements ShouldQueue
 
     public function handle(): void
     {
-        $isWaveform = fn($file) => $file->getCustomProperty('waveform');
-        $isData = fn($file) => $file->getCustomProperty('type') === 'data';
-        $formatData = fn($file) => $file->getCustomProperty('format') === $this->dataFormat;
-
-        $inputFilename = $this->track
-            ->getFirstMedia(
-                'waveform',
-                fn($file) => $isWaveform($file) && $isData($file) && $formatData($file)
-            )
-            ?->getPath();
-
-        $params = collect([
-            'waveformStyle' => self::WAVEFORM_STYLE,
-            'barWidth' => self::DEFAULT_BAR_WIDTH,
-            'barGap' => self::DEFAULT_BAR_GAP,
-            'bits' => self::DEFAULT_BITS,
-            'end' => $this->track->duration,
-        ]);
-
-        $outputFilename = $this->createOutputFilename($inputFilename, $params);
-
-        $processResult = $this->builder
-            ->setInputFilename(escapeshellarg($inputFilename))
-            ->setOutputFilename(escapeshellarg($outputFilename))
-            ->setWaveformStyle($params->get('waveformStyle'))
-            ->setBarWidth($params->get('barWidth'))
-            ->setBarGap($params->get('barGap'))
-            ->setBits($params->get('bits'))
-            ->setEnd($params->get('end'))
-            ->generateImage();
-
-        if ($processResult->successful()) {
-            $this->track
-                ->addMedia($outputFilename)
-                ->withCustomProperties([
-                    'waveform' => true,
-                    'format' => $this->imageFormat,
-                    'type' => 'image'
-                ])
-                ->toMediaLibrary('waveform', 'waveform');
-        }
+        $this->createWaveformSequence();
     }
 
+    private function zoomsFromDuration(int $duration): Collection
+    {
+        $bits = self::DEFAULT_BITS;
+        $zooms = collect([1, 2, 4, 8, 16, 32, 64, 128, 256, 512]);
+
+        return $zooms
+            ->map(fn($zoom) => $zoom * $duration)
+            ->filter(fn($zoom) => $zoom <= 3600)
+            ->map(fn($zoom) => $zoom * $bits);
+    }
+
+    private function createWaveformSequence(): void
+    {
+
+        $duration = $this->track->duration;
+        $zooms = $this->zoomsFromDuration($duration);
+
+        logger()->info('Zooms from duration', $zooms->toArray());
+
+        $inputFilename = $this->track->getFirstMedia('waveform')->getPath();
+
+        foreach ($zooms as $zoomLevel) {
+            $outputFilename = Str::replaceLast('dat', "{$zoomLevel}.dat", $inputFilename);
+
+            $processResult = $this->builder
+                ->setInputFilename(escapeshellarg($inputFilename))
+                ->setOutputFilename(escapeshellarg($outputFilename))
+                ->setZoom($zoomLevel)
+                ->generate();
+
+            if ($processResult->successful()) {
+                $this->track
+                    ->addMedia($outputFilename)
+                    ->withCustomProperties([
+                        'waveform' => true,
+                        'format' => 'dat',
+                        'type' => 'data',
+                        'zoom' => $zoomLevel
+                    ])
+                    ->toMediaLibrary('waveform', 'waveform');
+            }
+        }
+
+    }
+
+    /*
+     * Private Methods
+     */
     private function createOutputFilename(string $inputFilename, Collection|array $params): string
     {
         $outputFilename = Str::replaceLast($this->dataFormat, $this->imageFormat, $inputFilename);

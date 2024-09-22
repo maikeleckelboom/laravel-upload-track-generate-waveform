@@ -28,7 +28,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::resource('track', TrackController::class)
         ->only(['index', 'store', 'show', 'update', 'destroy']);
 
-    Route::get('/track/{track}/waveform', [TrackController::class, 'waveform']);
+    Route::get('/track/{track}/playback', [TrackController::class, 'playback']);
     Route::get('/track/{track}/waveform/status', [TrackController::class, 'waveformStatus']);
 
 

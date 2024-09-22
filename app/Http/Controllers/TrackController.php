@@ -11,6 +11,7 @@ use App\Http\Resources\UploadResource;
 use App\Jobs\AnalyzeAudioTempo;
 use App\Jobs\CreateWaveformData;
 use App\Jobs\CreateWaveformImage;
+use App\Jobs\CreateWaveformSequence;
 use App\Jobs\PreprocessAudio;
 use App\Models\Track;
 use App\Services\UploadService;
@@ -60,6 +61,7 @@ class TrackController extends Controller
                 new CreateWaveformData($track),
                 new CreateWaveformImage($track),
                 new AnalyzeAudioTempo($track),
+                new CreateWaveformSequence($track),
             ])->dispatch($track);
 
             defer(fn() => $upload->delete());
@@ -121,16 +123,29 @@ class TrackController extends Controller
 //        ]);
 //    }
 
+    /**
+     * @throws Exception
+     */
     public function waveformStatus(Request $request, Track $track)
     {
         $types = ['image', 'data'];
         $type = $request->query('type', 'data');
 
-        $isTypeReady = match ($type) {
-            'waveform' => fn($file) => $file->getCustomProperty('waveform'),
-            'image' => fn($file) => $file->getCustomProperty('image'),
-            default => fn($file) => false,
-        };
+        // TODO: Improve all of below here.
 
+        if (!in_array($type, $types)) {
+            return response()->json(['error' => 'Invalid type'], 400);
+        }
+
+
+        $isTypeReady = fn($file) => $file->getCustomProperty('type') === $type;
+        $isWaveform = fn($file) => $file->getCustomProperty('waveform');
+        $waveform = $track->getFirstMedia('waveform', fn($file) => $isWaveform($file) && $isTypeReady($file));
+
+        if (!$waveform?->exists()) {
+            throw new Exception('No waveform found');
+        }
+
+        return response()->file($waveform->getPath());
     }
 }

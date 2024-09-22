@@ -12,6 +12,7 @@ class CreateWaveformData implements ShouldQueue
 {
     use Queueable;
 
+    private const int DEFAULT_BITS = 8;
     private readonly AudioWaveformBuilder $builder;
     private readonly string $dataFormat;
 
@@ -36,7 +37,7 @@ class CreateWaveformData implements ShouldQueue
             ->setInputFilename(escapeshellarg($inputFilename))
             ->setOutputFilename(escapeshellarg($outputFilename))
             ->setEnd($this->track->duration)
-            ->setBits(8)
+            ->setBits(self::DEFAULT_BITS)
             ->setQuiet(true)
             ->generate();
 
@@ -52,46 +53,4 @@ class CreateWaveformData implements ShouldQueue
         }
     }
 
-    private function createWaveforms()
-    {
-
-        $sampleRate = 48000;
-        $duration = $this->track->duration;
-
-        $zooms = [
-            3840,
-            1280,
-            800,
-            400,
-            200,
-            100,
-            50,
-        ];
-
-
-        $inputFilename = $this->track->getFirstMedia('waveform')->getPath();
-
-        foreach ($zooms as $zoomLevel) {
-            $outputFilename = Str::replaceLast('dat', "{$zoomLevel}.dat", $inputFilename);
-
-            $processResult = $this->builder
-                ->setInputFilename(escapeshellarg($inputFilename))
-                ->setOutputFilename(escapeshellarg($outputFilename))
-                ->setZoom($zoomLevel)
-                ->generate();
-
-            if ($processResult->successful()) {
-                $this->track
-                    ->addMedia($outputFilename)
-                    ->withCustomProperties([
-                        'waveform' => true,
-                        'format' => 'dat',
-                        'type' => 'data',
-                        'zoom' => $zoomLevel
-                    ])
-                    ->toMediaLibrary('waveform', 'waveform');
-            }
-        }
-
-    }
 }
