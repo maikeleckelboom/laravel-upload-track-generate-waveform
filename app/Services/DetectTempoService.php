@@ -29,7 +29,7 @@ class DetectTempoService
             return null;
         }
 
-        $bpm = $this->averageBPMFromTimestamps($timestamps);
+        $bpm = $this->calculateAverageBpm($timestamps);
 
         return round($bpm, 2);
     }
@@ -71,7 +71,7 @@ class DetectTempoService
      * @param array $timestamps
      * @return float|int
      */
-    public function averageBPMFromTimestamps(array $timestamps): int|float
+    public function calculateAverageBpm(array $timestamps): int|float
     {
         $intervals = $this->calculateIntervals($timestamps);
         $averageInterval = array_sum($intervals) / count($intervals);

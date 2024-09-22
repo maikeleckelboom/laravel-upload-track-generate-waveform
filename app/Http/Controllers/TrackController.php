@@ -8,10 +8,8 @@ use App\Exceptions\ChunkCannotBeStored;
 use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
-use App\Jobs\AnalyzeAudioTempo;
 use App\Jobs\CreateWaveformData;
 use App\Jobs\CreateWaveformImage;
-use App\Jobs\CreateWaveformSequence;
 use App\Jobs\PreprocessAudio;
 use App\Models\Track;
 use App\Services\UploadService;
@@ -49,9 +47,14 @@ class TrackController extends Controller
 
         $upload = $this->uploadService->store($user = $request->user(), $data);
 
-        if ($upload->isCompleted()) {
+        $track = $user->tracks()->firstOrCreate(['name' => $upload->name]);
 
-            $track = $user->tracks()->create(['name' => $upload->name]);
+        if ($upload->uploadable()?->isNot($track)) {
+            $upload->uploadable()->associate($track);
+            $upload->save();
+        }
+
+        if ($upload->isCompleted()) {
 
             $track->addMediaFromDisk($upload->file_name, $upload->disk)
                 ->withCustomProperties(['original' => true])
@@ -60,14 +63,20 @@ class TrackController extends Controller
             PreprocessAudio::withChain([
                 new CreateWaveformData($track),
                 new CreateWaveformImage($track),
-                new AnalyzeAudioTempo($track),
-                new CreateWaveformSequence($track),
+                // new AnalyzeAudioTempo($track),
+                // new CreateWaveformSequence($track),
             ])->dispatch($track);
 
-            defer(fn() => $upload->delete());
+//            defer(fn() => $upload->delete());
         }
 
         return response()->json(UploadResource::make($upload));
+    }
+
+    public function storeMany(Request $request)
+    {
+        $tracks = $request->user()->tracks()->createMany($request->only(['name']));
+        return response()->json($tracks);
     }
 
     public function playback(Request $request, Track $track)
@@ -107,22 +116,6 @@ class TrackController extends Controller
         }
     }
 
-
-
-
-//    public function waveform(Request $request, Track $track)
-//    {
-//        $format = $request->query('format', config('audio_waveform.waveform_data_format'));
-//
-//        $matchDataFormat = fn($file) => $file->getCustomProperty('format') === $format;
-//        $waveform = $track->getFirstMedia('waveform', $matchDataFormat);
-//
-//        return response()->stream(fn() => $waveform->stream(), 200, [
-//            'Content-Type' => $waveform->mime_type,
-//            'Content-Length' => $waveform->size,
-//        ]);
-//    }
-
     /**
      * @throws Exception
      */
@@ -143,7 +136,7 @@ class TrackController extends Controller
         $waveform = $track->getFirstMedia('waveform', fn($file) => $isWaveform($file) && $isTypeReady($file));
 
         if (!$waveform?->exists()) {
-            throw new Exception('No waveform found');
+            return response()->json(['error' => 'No waveform found'], 404);
         }
 
         return response()->file($waveform->getPath());

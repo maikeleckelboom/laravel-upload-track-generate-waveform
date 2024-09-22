@@ -16,7 +16,6 @@ class CreateWaveformData implements ShouldQueue
     private readonly AudioWaveformBuilder $builder;
     private readonly string $dataFormat;
 
-
     public function __construct(private readonly Track $track)
     {
         $this->builder = new AudioWaveformBuilder();
@@ -52,5 +51,4 @@ class CreateWaveformData implements ShouldQueue
                 ->toMediaLibrary('waveform', 'waveform');
         }
     }
-
 }

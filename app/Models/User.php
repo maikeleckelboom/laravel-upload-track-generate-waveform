@@ -6,6 +6,7 @@ use App\Traits\CanBeFollowed;
 use App\Traits\CanFollow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
@@ -44,9 +45,9 @@ class User extends Authenticatable implements HasMedia
         ];
     }
 
-    public function uploads(): HasMany
+    public function uploads(): MorphMany
     {
-        return $this->hasMany(Upload::class);
+        return $this->morphMany(Upload::class, 'uploadable');
     }
 
     public function tracks(): HasMany

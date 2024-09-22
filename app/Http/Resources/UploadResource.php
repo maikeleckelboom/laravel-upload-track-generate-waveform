@@ -3,6 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Enum\UploadStatus;
+use App\Models\Track;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,6 +25,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property int $eta
  * @property string $updated_at
  * @property string $created_at
+ * @property string $uploadable_type
+ * @property int $uploadable_id
+ * @property Track|Model $uploadable
  */
 class UploadResource extends JsonResource
 {
@@ -52,6 +57,10 @@ class UploadResource extends JsonResource
                 'remaining' => $this->remaining_time,
                 'eta' => $this->eta,
             ],
+            'track' => $this->when(
+                $this->uploadable_type === Track::class,
+                TrackResource::make($this->uploadable)
+            ),
         ];
     }
 }

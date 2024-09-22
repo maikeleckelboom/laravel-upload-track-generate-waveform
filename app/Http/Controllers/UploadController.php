@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Data\UploadData;
-use App\Exceptions\ChunksCannotBeAssembled;
 use App\Exceptions\ChunkCannotBeStored;
+use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
 use App\Models\Media;
 use App\Models\Upload;
@@ -27,7 +27,9 @@ class UploadController extends Controller
 
     public function index(Request $request)
     {
-        return response()->json(UploadResource::collection($request->user()->uploads()->get()));
+        $tracks = $request->user()->tracks();
+        $uploads = $tracks->get()->pluck('uploads')->flatten();
+        return response()->json(UploadResource::collection($uploads));
     }
 
     /**
@@ -59,8 +61,16 @@ class UploadController extends Controller
 
     public function destroy(Request $request, string $identifier)
     {
-        $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
+        $upload = $request->user()
+            ->tracks()
+            ->get()
+            ->pluck('uploads')
+            ->flatten()
+            ->where('identifier', $identifier)
+            ->firstOrFail();
+
         $upload->delete();
+
         return response()->noContent();
     }
 

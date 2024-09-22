@@ -23,7 +23,6 @@ class CreateWaveformImage implements ShouldQueue
     private readonly string $imageFormat;
     private readonly string $dataFormat;
 
-
     public function __construct(private readonly Track $track)
     {
         $this->builder = new AudioWaveformBuilder();
@@ -52,7 +51,7 @@ class CreateWaveformImage implements ShouldQueue
             'end' => $this->track->duration,
         ]);
 
-        $outputFilename = $this->createOutputFilename($inputFilename, $params);
+        $outputFilename = $this->replaceExtensionAddParams($inputFilename, $params);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
@@ -62,6 +61,7 @@ class CreateWaveformImage implements ShouldQueue
             ->setBarGap($params->get('barGap'))
             ->setBits($params->get('bits'))
             ->setEnd($params->get('end'))
+            ->setQuiet(true)
             ->generateImage();
 
         if ($processResult->successful()) {
@@ -76,7 +76,7 @@ class CreateWaveformImage implements ShouldQueue
         }
     }
 
-    private function createOutputFilename(string $inputFilename, Collection|array $params): string
+    private function replaceExtensionAddParams(string $inputFilename, Collection|array $params): string
     {
         $outputFilename = Str::replaceLast($this->dataFormat, $this->imageFormat, $inputFilename);
 
@@ -90,9 +90,6 @@ class CreateWaveformImage implements ShouldQueue
         );
     }
 
-    /**
-     * Format the parameters into the desired string format.
-     */
     private function formatParam(string $key, $value): string
     {
         return match ($key) {
@@ -105,9 +102,6 @@ class CreateWaveformImage implements ShouldQueue
         };
     }
 
-    /**
-     * Format the timestamp for the 'end' parameter.
-     */
     private function formatTimestamp(int $timestamp): string
     {
         return 'end-' . Carbon::createFromTimestamp($timestamp)->format('i_s');

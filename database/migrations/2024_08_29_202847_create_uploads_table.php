@@ -25,8 +25,7 @@ return new class extends Migration {
             $table->enum('status', UploadStatus::toArray())->default(UploadStatus::QUEUED);
             $table->unsignedBigInteger('elapsed_time')->default(0);
             $table->float('transfer_speed')->default(0);
-
-            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->morphs('uploadable');
             $table->timestamps();
         });
     }

@@ -6,6 +6,7 @@ use App\Data\UploadData;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Upload extends Model
 {
@@ -27,11 +28,6 @@ class Upload extends Model
         'remaining_time',
         'eta',
     ];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function getExtensionAttribute(): string
     {
@@ -82,4 +78,8 @@ class Upload extends Model
         ]);
     }
 
+    public function uploadable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 }

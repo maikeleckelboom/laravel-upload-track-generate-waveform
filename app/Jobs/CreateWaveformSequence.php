@@ -55,30 +55,29 @@ class CreateWaveformSequence implements ShouldQueue
 
         logger()->info('Zooms from duration', $zooms->toArray());
 
-        $inputFilename = $this->track->getFirstMedia('waveform')->getPath();
-
-        foreach ($zooms as $zoomLevel) {
-            $outputFilename = Str::replaceLast('dat', "{$zoomLevel}.dat", $inputFilename);
-
-            $processResult = $this->builder
-                ->setInputFilename(escapeshellarg($inputFilename))
-                ->setOutputFilename(escapeshellarg($outputFilename))
-                ->setZoom($zoomLevel)
-                ->generate();
-
-            if ($processResult->successful()) {
-                $this->track
-                    ->addMedia($outputFilename)
-                    ->withCustomProperties([
-                        'waveform' => true,
-                        'format' => 'dat',
-                        'type' => 'data',
-                        'zoom' => $zoomLevel
-                    ])
-                    ->toMediaLibrary('waveform', 'waveform');
-            }
-        }
-
+//        $inputFilename = $this->track->getFirstMedia('waveform')->getPath();
+//
+//        foreach ($zooms as $zoomLevel) {
+//            $outputFilename = Str::replaceLast('dat', "{$zoomLevel}.dat", $inputFilename);
+//
+//            $processResult = $this->builder
+//                ->setInputFilename(escapeshellarg($inputFilename))
+//                ->setOutputFilename(escapeshellarg($outputFilename))
+//                ->setZoom($zoomLevel)
+//                ->generate();
+//
+//            if ($processResult->successful()) {
+//                $this->track
+//                    ->addMedia($outputFilename)
+//                    ->withCustomProperties([
+//                        'waveform' => true,
+//                        'format' => 'dat',
+//                        'type' => 'data',
+//                        'zoom' => $zoomLevel
+//                    ])
+//                    ->toMediaLibrary('waveform', 'waveform');
+//            }
+//        }
     }
 
     /*
