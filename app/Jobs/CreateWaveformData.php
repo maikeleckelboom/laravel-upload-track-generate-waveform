@@ -14,12 +14,12 @@ class CreateWaveformData implements ShouldQueue
 
     private const int DEFAULT_BITS = 8;
     private readonly AudioWaveformBuilder $builder;
-    private readonly string $dataFormat;
+    private readonly string $format;
 
     public function __construct(private readonly Track $track)
     {
         $this->builder = new AudioWaveformBuilder();
-        $this->dataFormat = config('audio_waveform.data_format', 'dat');
+        $this->format = config('audio_waveform.data_format', 'dat');
     }
 
     public function handle(): void
@@ -30,7 +30,7 @@ class CreateWaveformData implements ShouldQueue
         );
 
         $inputFilename = $playbackAudio->getPath();
-        $outputFilename = Str::replaceLast($playbackAudio->extension, $this->dataFormat, $inputFilename);
+        $outputFilename = Str::replaceLast($playbackAudio->extension, $this->format, $inputFilename);
 
         $processResult = $this->builder
             ->setInputFilename(escapeshellarg($inputFilename))
@@ -44,8 +44,7 @@ class CreateWaveformData implements ShouldQueue
             $this->track
                 ->addMedia($outputFilename)
                 ->withCustomProperties([
-                    'waveform' => true,
-                    'format' => $this->dataFormat,
+                    'format' => $this->format,
                     'type' => 'data'
                 ])
                 ->toMediaLibrary('waveform', 'waveform');

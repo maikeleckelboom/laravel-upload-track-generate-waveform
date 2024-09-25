@@ -5,7 +5,7 @@ namespace App\Services;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class DetectTempoService
+class AubioBeatService
 {
     /**
      * Calculate BPM from audio using aubio.
@@ -13,7 +13,7 @@ class DetectTempoService
      * @param string $filePath
      * @return float|null
      */
-    public function calculateBPM(string $filePath): ?float
+    public function calculateBpm(string $filePath): ?float
     {
         $process = new Process(['aubio', 'beat', $filePath]);
         $process->run();
@@ -32,6 +32,16 @@ class DetectTempoService
         $bpm = $this->calculateAverageBpm($timestamps);
 
         return round($bpm, 2);
+    }
+    /**
+     * @param array $timestamps
+     * @return float|int
+     */
+    public function calculateAverageBpm(array $timestamps): int|float
+    {
+        $intervals = $this->calculateIntervals($timestamps);
+        $averageInterval = array_sum($intervals) / count($intervals);
+        return 60 / $averageInterval;
     }
 
     /**
@@ -67,14 +77,4 @@ class DetectTempoService
         return $intervals;
     }
 
-    /**
-     * @param array $timestamps
-     * @return float|int
-     */
-    public function calculateAverageBpm(array $timestamps): int|float
-    {
-        $intervals = $this->calculateIntervals($timestamps);
-        $averageInterval = array_sum($intervals) / count($intervals);
-        return 60 / $averageInterval;
-    }
 }

@@ -9,7 +9,6 @@ use App\Exceptions\ChunkCountMismatch;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
 use App\Jobs\CreateWaveformData;
-use App\Jobs\CreateWaveformImage;
 use App\Jobs\PreprocessAudio;
 use App\Models\Track;
 use App\Services\UploadService;
@@ -17,6 +16,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
+use Symfony\Component\HttpFoundation\Response;
 
 class TrackController extends Controller
 {
@@ -28,8 +28,10 @@ class TrackController extends Controller
 
     public function index(Request $request)
     {
-        $tracks = $request->user()->tracks()
-            ->paginate(10)
+        $tracks = $request
+            ->user()
+            ->tracks()
+            ->paginate(12)
             ->sortByDesc('created_at')
             ->values();
 
@@ -47,14 +49,13 @@ class TrackController extends Controller
 
         $upload = $this->uploadService->store($user = $request->user(), $data);
 
-        $track = $user->tracks()->firstOrCreate(['name' => $upload->name]);
-
-        if ($upload->uploadable()?->isNot($track)) {
-            $upload->uploadable()->associate($track);
-            $upload->save();
-        }
 
         if ($upload->isCompleted()) {
+
+            $track = $user->tracks()->firstOrCreate(['name' => $upload->name]);
+
+            $upload->uploadable()->associate($track);
+            $upload->save();
 
             $track->addMediaFromDisk($upload->file_name, $upload->disk)
                 ->withCustomProperties(['original' => true])
@@ -62,12 +63,8 @@ class TrackController extends Controller
 
             PreprocessAudio::withChain([
                 new CreateWaveformData($track),
-                new CreateWaveformImage($track),
-                // new AnalyzeAudioTempo($track),
-                // new CreateWaveformSequence($track),
             ])->dispatch($track);
 
-//            defer(fn() => $upload->delete());
         }
 
         return response()->json(UploadResource::make($upload));
@@ -82,10 +79,7 @@ class TrackController extends Controller
     public function playback(Request $request, Track $track)
     {
         $audio = $track->getFirstMedia('audio');
-        return response()->stream(fn() => $audio->stream(), 200, [
-            'Content-Type' => $audio->mime_type,
-            'Content-Length' => $audio->size,
-        ]);
+        return $audio->toResponse($request);
     }
 
     public function create(Request $request)
@@ -121,24 +115,28 @@ class TrackController extends Controller
      */
     public function waveformStatus(Request $request, Track $track)
     {
-        $types = ['image', 'data'];
         $type = $request->query('type', 'data');
 
-        // TODO: Improve all of below here.
-
-        if (!in_array($type, $types)) {
-            return response()->json(['error' => 'Invalid type'], 400);
+        if (!in_array($type, ['image', 'data'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Type must be either "image" or "data"'
+            ], Response::HTTP_BAD_REQUEST);
         }
-
 
         $isTypeReady = fn($file) => $file->getCustomProperty('type') === $type;
-        $isWaveform = fn($file) => $file->getCustomProperty('waveform');
-        $waveform = $track->getFirstMedia('waveform', fn($file) => $isWaveform($file) && $isTypeReady($file));
+        $waveform = $track->getFirstMedia('waveform', fn($file) => $isTypeReady($file));
 
         if (!$waveform?->exists()) {
-            return response()->json(['error' => 'No waveform found'], 404);
+            return response()->json([
+                'status' => 'pending',
+                'message' => 'Waveform is being generated'
+            ], Response::HTTP_ACCEPTED);
         }
 
-        return response()->file($waveform->getPath());
+        return response()->json([
+            'status' => 'ready',
+            'url' => $waveform->getUrl()
+        ], Response::HTTP_OK);
     }
 }

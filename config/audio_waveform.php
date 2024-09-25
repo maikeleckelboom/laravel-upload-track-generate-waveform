@@ -18,4 +18,8 @@ return [
      * The format to convert the waveform data to for image generation.
      */
     'waveform_image_format' => env('AUDIO_WAVEFORM_IMAGE_FORMAT', 'png'),
+    /**
+     * The format for the artwork image.
+     */
+    'artwork_format' => env('AUDIO_ARTWORK_FORMAT', 'png'),
 ];

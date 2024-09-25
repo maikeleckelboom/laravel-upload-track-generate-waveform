@@ -23,6 +23,7 @@ class Track extends Model implements HasMedia
         'playback_url',
         'waveform_data_url',
         'waveform_image_url',
+        'artwork_url',
     ];
 
     protected $hidden = [
@@ -63,15 +64,18 @@ class Track extends Model implements HasMedia
     public function getWaveformDataUrlAttribute(): ?string
     {
         $typeData = fn($file) => $file->getCustomProperty('type') === 'data';
-        $dataFormat = fn($file) => $file->getCustomProperty('format') === config('audio_waveform.waveform_data_format', 'dat');
-        return $this->getFirstMedia('waveform', fn($file) => $typeData($file) && $dataFormat($file))?->getUrl();
+        return $this->getFirstMedia('waveform', fn($file) => $typeData($file))?->getUrl();
     }
 
     public function getWaveformImageUrlAttribute(): ?string
     {
         $imageFormat = fn($file) => $file->getCustomProperty('type') === 'image';
-        $imageType = fn($file) => $file->getCustomProperty('format') === config('audio_waveform.waveform_image_format', 'png');
-        return $this->getFirstMedia('waveform', fn($file) => $imageFormat($file) && $imageType($file))?->getUrl();
+        return $this->getFirstMedia('waveform', fn($file) => $imageFormat($file))?->getUrl();
+    }
+
+    public function getArtworkUrlAttribute(): ?string
+    {
+        return $this->getFirstMedia('artwork')?->getUrl();
     }
 
     public function registerMediaConversions(?Media $media = null): void

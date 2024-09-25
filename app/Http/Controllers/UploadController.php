@@ -6,16 +6,14 @@ use App\Data\UploadData;
 use App\Exceptions\ChunkCannotBeStored;
 use App\Exceptions\ChunksCannotBeAssembled;
 use App\Http\Resources\UploadResource;
-use App\Models\Media;
 use App\Models\Upload;
 use App\Models\User;
 use App\Services\UploadService;
-use Exception;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
-use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UploadController extends Controller
 {
@@ -53,6 +51,26 @@ class UploadController extends Controller
         return response()->json(UploadResource::make($upload));
     }
 
+    public function update(Request $request, string $identifier)
+    {
+        $upload = $request->user()
+            ->tracks()
+            ->get()
+            ->pluck('uploads')
+            ->flatten()
+            ->where('identifier', $identifier)
+            ->firstOrFail();
+
+        $upload->update([
+            'elapsed_time' => $request->get('elapsed'),
+            'transfer_speed' => $request->get('speed'),
+        ]);
+
+        defer(fn() => $upload->delete());
+
+        return response()->json(UploadResource::make($upload));
+    }
+
     public function show(Request $request, string $identifier)
     {
         $upload = $request->user()->uploads()->where('identifier', $identifier)->firstOrFail();
@@ -78,34 +96,11 @@ class UploadController extends Controller
      * @throws FileIsTooBig
      * @throws FileDoesNotExist
      */
-    public function addUploadToCollection(User $user, Upload $upload): \Spatie\MediaLibrary\MediaCollections\Models\Media
+    public function addUploadToCollection(User $user, Upload $upload): Media
     {
-        try {
-            $path = Storage::disk($upload->disk)->path($upload->file_name);
-            return $user->addMedia($path)
-                ->withCustomProperties(['upload_id' => $upload->id])
-                ->toMediaCollection('media');
-
-        } catch (Exception $e) {
-            if ($e instanceof FileDoesNotExist) {
-                $resource = $this->tryFindMediaResource($user, $upload);
-
-                if ($resource->isEmpty()) {
-                    throw $e;
-                }
-
-                return $resource->first();
-            }
-
-            throw $e;
-        }
-    }
-
-    private function tryFindMediaResource(User $user, Upload $upload): MediaCollection
-    {
-        return Media::where('custom_properties->upload_id', $upload->id)
-            ->where('disk', $upload->disk)
-            ->orWhere('file_name', $upload->file_name)
-            ->get();
+        $path = Storage::disk($upload->disk)->path($upload->file_name);
+        return $user->addMedia($path)
+            ->withCustomProperties(['upload_id' => $upload->id])
+            ->toMediaCollection('media');
     }
 }

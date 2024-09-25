@@ -17,29 +17,28 @@ class CreateWaveformImage implements ShouldQueue
     private readonly AudioWaveformBuilder $builder;
     private const int DEFAULT_BITS = 8;
     private const string WAVEFORM_STYLE = 'bars';
-    private const int DEFAULT_BAR_WIDTH = 4;
-    private const int DEFAULT_BAR_GAP = 2;
-
-    private readonly string $imageFormat;
+    private const int DEFAULT_BAR_WIDTH = 1;
+    private const int DEFAULT_BAR_GAP = 1;
+    private const int DEFAULT_WIDTH = 1280;
+    private const int DEFAULT_HEIGHT = 128;
+    private string $imageFormat = 'png';
     private readonly string $dataFormat;
 
     public function __construct(private readonly Track $track)
     {
         $this->builder = new AudioWaveformBuilder();
-        $this->imageFormat = config('audio_waveform.image_format', 'png');
         $this->dataFormat = config('audio_waveform.data_format', 'dat');
     }
 
     public function handle(): void
     {
-        $isWaveform = fn($file) => $file->getCustomProperty('waveform');
         $isData = fn($file) => $file->getCustomProperty('type') === 'data';
         $formatData = fn($file) => $file->getCustomProperty('format') === $this->dataFormat;
 
         $inputFilename = $this->track
             ->getFirstMedia(
                 'waveform',
-                fn($file) => $isWaveform($file) && $isData($file) && $formatData($file)
+                fn($file) => $isData($file) && $formatData($file)
             )
             ?->getPath();
 
@@ -48,6 +47,8 @@ class CreateWaveformImage implements ShouldQueue
             'barWidth' => self::DEFAULT_BAR_WIDTH,
             'barGap' => self::DEFAULT_BAR_GAP,
             'bits' => self::DEFAULT_BITS,
+            'width' => self::DEFAULT_WIDTH,
+            'height' => self::DEFAULT_HEIGHT,
             'end' => $this->track->duration,
         ]);
 
@@ -61,6 +62,8 @@ class CreateWaveformImage implements ShouldQueue
             ->setBarGap($params->get('barGap'))
             ->setBits($params->get('bits'))
             ->setEnd($params->get('end'))
+            ->setWidth($params->get('width'))
+            ->setHeight($params->get('height'))
             ->setQuiet(true)
             ->generateImage();
 
@@ -68,7 +71,6 @@ class CreateWaveformImage implements ShouldQueue
             $this->track
                 ->addMedia($outputFilename)
                 ->withCustomProperties([
-                    'waveform' => true,
                     'format' => $this->imageFormat,
                     'type' => 'image'
                 ])
@@ -98,6 +100,8 @@ class CreateWaveformImage implements ShouldQueue
             'barGap' => "bar-gap-{$value}",
             'bits' => "bits-{$value}",
             'end' => $this->formatTimestamp($value),
+            'width' => "width-{$value}",
+            'height' => "height-{$value}",
             default => "{$key}_{$value}",
         };
     }

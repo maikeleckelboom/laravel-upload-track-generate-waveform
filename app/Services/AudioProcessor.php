@@ -4,29 +4,65 @@ namespace App\Services;
 
 use App\Format\Audio\Opus;
 use App\Models\Track;
+use Illuminate\Support\Str;
+use ProtoneMedia\LaravelFFMpeg\Exporters\HLSExporter;
+use ProtoneMedia\LaravelFFMpeg\FFMpeg\ImageFormat;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class AudioProcessor
 {
+    private array $supportedFormats;
+    private string $playbackFormat;
+    private string $artworkFormat;
+
+    public function __construct()
+    {
+        $this->playbackFormat = config('audio_waveform.playback_format');
+        $this->artworkFormat = config('audio_waveform.artwork_format');
+        $this->supportedFormats = explode(',', config('audio_waveform.formats'));
+    }
+
     public function process(Track $track): void
     {
-        $this->isSupportedFormat($track)
-            ? $this->addOriginalFileAsPlayback($track)
-            : $this->addConvertedFileAsPlayback($track);
+        $this->createAudioForPlayback($track);
 
         $track->duration = $this->getDurationInSeconds($track);
         $track->save();
+
+        $this->getArtworkFromAudio($track);
     }
 
-    private function addOriginalFileAsPlayback(Track $track): void
+    private function alwaysProcess(Track $track): void
     {
-        $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
+        $audio = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
+
+        $opener = FFMpeg::fromDisk($audio->disk)->open($audio->getPathRelativeToRoot());
+
+        $outputFilename = Str::replaceLast($audio->extension, $this->playbackFormat, $audio->getPathRelativeToRoot());
+
+
+
+
+    }
+
+    private function createAudioForPlayback(Track $track): void
+    {
+        $this->isSupportedFormat($track)
+            ? $this->addOriginalAudio($track)
+            : $this->addConvertedAudio($track);
+    }
+
+    private function addOriginalAudio(Track $track): void
+    {
+        $original = $track->getFirstMedia(
+            'audio',
+            fn($file) => $file->getCustomProperty('original')
+        );
         $track->addMedia($original->getPath())
             ->preservingOriginal()
             ->withCustomProperties([
                 'playback' => true,
-                'format' => $original->extension,
-                'type' => 'audio',
+                'type' => 'audio'
             ])
             ->toMediaLibrary('audio', 'playback');
     }
@@ -35,21 +71,28 @@ class AudioProcessor
     {
         $audio = $track->getFirstMedia('audio');
         $opener = FFMpeg::fromDisk($audio->disk)->open($audio->getPathRelativeToRoot());
-        return $opener->getAudioStream()->get('duration');
+        $audioStream = $opener->getAudioStream();
+        return $audioStream->get('duration');
     }
 
-    public function addConvertedFileAsPlayback(Track $track): void
+    public function addConvertedAudio(Track $track): void
     {
-        $original = $track->getFirstMedia('audio', fn($file) => $file->getCustomProperty('original'));
+        $audio = $track->getFirstMedia(
+            'audio',
+            fn($file) => $file->getCustomProperty('original')
+        );
 
-        $ffmpeg = FFMpeg::fromDisk($original->disk)->open($original->getPathRelativeToRoot());
+        $opener = FFMpeg::fromDisk($audio->disk)
+            ->open($audio->getPathRelativeToRoot());
 
-        $playbackFormat = config('audio_waveform.playback_format');
+        $outputFilename = Str::replaceLast(
+            $audio->extension,
+            $this->playbackFormat,
+            $audio->getPathRelativeToRoot()
+        );
 
-        $outputFilename = $this->convertToPlaybackFormat($original->getPathRelativeToRoot(), $playbackFormat);
-
-        $ffmpeg->export()
-            ->toDisk($original->disk)
+        $opener->export()
+            ->toDisk($audio->disk)
             ->inFormat(new Opus)
             ->addFilter('-strict')
             ->addFilter('-2')
@@ -57,32 +100,52 @@ class AudioProcessor
             ->addFilter('quiet')
             ->save($outputFilename);
 
-        $track->addMediaFromDisk($outputFilename, $original->disk)
+        $track
+            ->addMediaFromDisk($outputFilename, $audio->disk)
             ->withCustomProperties([
                 'playback' => true,
-                'format' => $playbackFormat,
-                'type' => 'audio',
+                'type' => 'audio'
             ])
             ->toMediaLibrary('audio', 'playback');
     }
 
-    private function convertToPlaybackFormat(string $path, string $format): string
+    public function getArtworkFromAudio(Track $track): void
     {
-        $dirname = pathinfo($path, PATHINFO_DIRNAME);
-        $filename = pathinfo($path, PATHINFO_FILENAME);
-        return "{$dirname}/{$filename}." . $format;
+        $audio = $track->getFirstMedia(
+            'audio',
+            fn($file) => $file->getCustomProperty('original')
+        );
+
+        $outputFilename = "{$audio->uuid}.{$this->artworkFormat}";
+
+        $ffmpeg = FFMpeg::fromDisk($audio->disk)
+            ->open($audio->getPathRelativeToRoot());
+
+        if ($ffmpeg->getAudioStream()->isAudio()) {
+            $success = $ffmpeg
+                ->exportFramesByAmount(1)
+                ->inFormat(new ImageFormat)
+                ->toDisk('temporary')
+                ->save($outputFilename);
+            if ($success) {
+                $track
+                    ->addMediaFromDisk($outputFilename, 'temporary')
+                    ->withResponsiveImages()
+                    ->onQueue()
+                    ->toMediaLibrary('artwork', 'artwork');
+            }
+        }
     }
 
     private function isSupportedFormat(Track $track): bool
     {
         $format = $track->getFirstMedia('audio')->extension;
-        $supportedFormats = explode(',', config('audio_waveform.formats'));
-        return in_array($format, $supportedFormats);
+        return in_array($format, $this->supportedFormats);
     }
 
     private function isPlaybackFormat(Track $track): bool
     {
-        $playbackFormat = config('audio_waveform.playback_format', 'opus');
-        return $track->getFirstMedia('audio')->extension === $playbackFormat;
+        $original = $track->getFirstMedia('audio');
+        return $original->extension === $this->playbackFormat;
     }
 }

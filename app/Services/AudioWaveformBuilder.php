@@ -34,7 +34,7 @@ class AudioWaveformBuilder
     protected float $start = 0; // (default: 0)
     protected float $end = 0; // (default: 0)
     protected int $barWidth = 2; // (default: 8)
-    protected int $barGap = 1; // (default: 4)
+    protected int $barGap = 1; // (default: 4) - min is 1 instead of 0, compile from source to fix
     protected string|false $borderColor = false;
 
 
@@ -114,7 +114,6 @@ class AudioWaveformBuilder
         return $this;
     }
 
-
     public function setStart(float $start): static
     {
         $this->start = $start;
@@ -190,10 +189,9 @@ class AudioWaveformBuilder
             ->addOption('--width', $this->width)
             ->addOption('--height', $this->height)
             ->addOption('--start', $this->start)
-            ->addConditionalOption('--end', $this->end, $this->end > 0)
-            ->addConditionalOption('--zoom', $this->zoom, !!$this->zoom && !($this->end > 0))
-            ->addConditionalOption('--pixels-per-second', $this->pixelsPerSecond, !!$this->pixelsPerSecond && !($this->end > 0) && !$this->zoom);
-
+            ->addOptionWhen('--end', $this->end, $this->end > 0)
+            ->addOptionWhen('--zoom', $this->zoom, !!$this->zoom && !($this->end > 0))
+            ->addOptionWhen('--pixels-per-second', $this->pixelsPerSecond, !!$this->pixelsPerSecond && !($this->end > 0) && !$this->zoom);
     }
 
     public function generate(): ProcessResult
@@ -220,9 +218,9 @@ class AudioWaveformBuilder
             ->addOption('--waveform-style', $this->waveformStyle)
             ->addOption('--bar-width', $this->barWidth)
             ->addOption('--bar-gap', $this->barGap)
-            ->addConditionalOption('--border-color', $this->borderColor, $this->borderColor !== false)
-            ->addConditionalArgument('--with-axis-labels', '--no-axis', $this->axisLabels)
-            ->addConditionalOption('--axis-label-color', $this->axisLabelColor, $this->axisLabels);
+            ->addOptionWhen('--border-color', $this->borderColor, $this->borderColor !== false)
+            ->addTernaryArgument('--with-axis-labels', '--no-axis', $this->axisLabels)
+            ->addOptionWhen('--axis-label-color', $this->axisLabelColor, $this->axisLabels);
 
         $command = $commandBuilder->getCommand();
 

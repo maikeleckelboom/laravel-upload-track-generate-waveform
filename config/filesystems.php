@@ -38,18 +38,18 @@ return [
             'throw' => false,
         ],
 
-        'playback' => [
+        'artwork' => [
             'driver' => 'local',
-            'root' => storage_path('app/private/playback'),
-            'url' => env('APP_URL') . '/storage/private/playback',
+            'root' => storage_path('app/private/artwork'),
+            'url' => env('APP_URL') . '/storage/private/artwork',
             'visibility' => 'private',
             'throw' => false,
         ],
 
-        'conversion' => [
+        'playback' => [
             'driver' => 'local',
-            'root' => storage_path('app/private/conversion'),
-            'url' => env('APP_URL') . '/storage/private/conversion',
+            'root' => storage_path('app/private/playback'),
+            'url' => env('APP_URL') . '/storage/private/playback',
             'visibility' => 'private',
             'throw' => false,
         ],
@@ -62,31 +62,6 @@ return [
             'throw' => false,
         ],
 
-        'waveform_data' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private/waveform_data'),
-            'url' => env('APP_URL') . '/storage/private/waveform_data',
-            'visibility' => 'private',
-            'throw' => false,
-        ],
-
-        'waveform_image' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private/waveform_image'),
-            'url' => env('APP_URL') . '/storage/private/waveform_image',
-            'visibility' => 'private',
-            'throw' => false,
-        ],
-
-
-        'tracks' => [
-            'driver' => 'local',
-            'root' => storage_path('app/tracks'),
-            'url' => env('APP_URL') . '/storage/tracks',
-            'visibility' => 'private',
-            'throw' => false,
-        ],
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
@@ -95,7 +70,7 @@ return [
             'throw' => false,
         ],
 
-        'local-temporary' => [
+        'temporary' => [
             'driver' => 'local',
             'root' => storage_path('app/temporary'),
             'url' => env('APP_URL') . '/storage/temporary',

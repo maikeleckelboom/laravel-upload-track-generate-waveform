@@ -18,14 +18,14 @@ class CommandBuilder
         return $this;
     }
 
-    public function addConditionalOption(string $option, mixed $value, bool $condition): static
+    public function addOptionWhen(string $option, mixed $value, bool $condition): static
     {
         $this->command .= $condition ? " $option $value" : '';
 
         return $this;
     }
 
-    public function addConditionalArgument(string $optionA, string $optionB, bool $condition): static
+    public function addTernaryArgument(string $optionA, string $optionB, bool $condition): static
     {
         $this->command .= $condition ? " $optionA" : " $optionB";
 
